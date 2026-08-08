@@ -14,8 +14,8 @@ Complete end-to-end job application workflow. Takes the user from a job posting 
 
 Before starting, verify:
 
-1. **Auth**: Run `nai auth whoami --json`. If exit code 4, tell the user to run `nai auth login` first.
-2. **Resume**: Run `nai resume view --json`. If no resume exists, direct the user to https://nextloom.ai/resume to upload their master resume.
+1. **Auth**: Run `nextloom auth whoami --json`. If exit code 4, tell the user to run `nextloom auth login` first.
+2. **Resume**: Run `nextloom resume view --json`. If no resume exists, direct the user to https://nextloom.ai/resume to upload their master resume.
 
 ## Workflow
 
@@ -24,13 +24,13 @@ Before starting, verify:
 If the user provides a URL:
 
 ```bash
-nai app add "<job-posting-url>" --json
+nextloom app add "<job-posting-url>" --json
 ```
 
 If the user provides a description (company + role):
 
 ```bash
-nai app add "<Company Name> - <Role Title>" --json
+nextloom app add "<Company Name> - <Role Title>" --json
 ```
 
 The CLI parses the job posting with AI and extracts: company, title, required skills, qualifications, and job description. Save the returned application `id`.
@@ -46,7 +46,7 @@ Present a summary to the user before proceeding:
 ### Step 2 — Generate Tailored Resume
 
 ```bash
-nai generate resume <app-id> --json
+nextloom generate resume <app-id> --json
 ```
 
 This runs an async pipeline:
@@ -60,7 +60,7 @@ This runs an async pipeline:
 The process takes 30–120 seconds. Poll the status every 5 seconds:
 
 ```bash
-nai generate status <app-id> --json
+nextloom generate status <app-id> --json
 ```
 
 When complete, share the output file path with the user. The file is named like `Ada_Lovelace_Resume_Acme_Corp.md`.
@@ -70,7 +70,7 @@ If the ATS check rejects (score too low), the system auto-retries once. If it fa
 ### Step 3 — Generate Cover Letter
 
 ```bash
-nai generate cover-letter <app-id> --json
+nextloom generate cover-letter <app-id> --json
 ```
 
 Same async pipeline, different output. When done, share the file path.
@@ -80,20 +80,20 @@ Same async pipeline, different output. When done, share the file path.
 After the user confirms they've submitted their application:
 
 ```bash
-nai app update <app-id> --status Applied --json
+nextloom app update <app-id> --status Applied --json
 ```
 
 ### Optional: Generate Additional Documents
 
 ```bash
-nai generate follow-up <app-id> --json   # If no response after 1-2 weeks
-nai generate thank-you <app-id> --json   # After an interview
+nextloom generate follow-up <app-id> --json   # If no response after 1-2 weeks
+nextloom generate thank-you <app-id> --json   # After an interview
 ```
 
 ## Pro Tips
 
 - **Multiple applications**: Process one at a time. The generation pipeline is per-application.
-- **ATS score is visible**: After generation, `nai app view <id> --json` shows the ATS score in the application details.
+- **ATS score is visible**: After generation, `nextloom app view <id> --json` shows the ATS score in the application details.
 - **Resume quality matters**: Better master resume → better tailoring results. Encourage the user to keep their master resume updated.
 - **Job descriptions**: Better input (full JD with requirements) → better AI parsing → better tailored output.
 
@@ -101,8 +101,8 @@ nai generate thank-you <app-id> --json   # After an interview
 
 | Error | What to do |
 |-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nai auth login`. |
-| `exit code 3` | Generation failed. Check `nai generate status <app-id> --json` for details. |
+| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
+| `exit code 3` | Generation failed. Check `nextloom generate status <app-id> --json` for details. |
 | App add returns empty | The URL may not be parseable. Ask the user for company and role manually. |
 | Resume generation loops | ATS score may be persistently low. Suggest the user review their master resume. |
 | "No resume found" | User needs to upload a master resume at https://nextloom.ai/resume. |

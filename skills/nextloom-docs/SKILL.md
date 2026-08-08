@@ -12,16 +12,16 @@ Generate AI-tailored documents for your job applications. Each document is custo
 
 ## Prerequisites
 
-1. Run `nai auth whoami --json`. If exit code 4 → `nai auth login`.
-2. You need an application ID. Run `nai app list --json` to find the right one.
-3. A master resume must exist (`nai resume view --json`). If empty, direct to https://nextloom.ai/resume.
+1. Run `nextloom auth whoami --json`. If exit code 4 → `nextloom auth login`.
+2. You need an application ID. Run `nextloom app list --json` to find the right one.
+3. A master resume must exist (`nextloom resume view --json`). If empty, direct to https://nextloom.ai/resume.
 
 ## Document Types
 
 ### 1. Tailored Resume
 
 ```bash
-nai generate resume <app-id> --json
+nextloom generate resume <app-id> --json
 ```
 
 Rewrites your master resume to match the specific job requirements. Highlights relevant experience, reorders skills to match the job description, and uses keywords from the posting for ATS optimization.
@@ -35,7 +35,7 @@ Rewrites your master resume to match the specific job requirements. Highlights r
 ### 2. Cover Letter
 
 ```bash
-nai generate cover-letter <app-id> --json
+nextloom generate cover-letter <app-id> --json
 ```
 
 Generates a role-specific cover letter that connects your experience to the company's needs. Written in a professional but warm tone.
@@ -47,7 +47,7 @@ Generates a role-specific cover letter that connects your experience to the comp
 ### 3. Follow-Up Email
 
 ```bash
-nai generate follow-up <app-id> --json
+nextloom generate follow-up <app-id> --json
 ```
 
 A polite follow-up email for when you haven't heard back after applying. References your application date and expresses continued interest.
@@ -59,7 +59,7 @@ A polite follow-up email for when you haven't heard back after applying. Referen
 ### 4. Thank-You Note
 
 ```bash
-nai generate thank-you <app-id> --json
+nextloom generate thank-you <app-id> --json
 ```
 
 A post-interview thank-you note that references specific topics discussed. Shows engagement and professionalism.
@@ -71,7 +71,7 @@ A post-interview thank-you note that references specific topics discussed. Shows
 ### Check Generation Status
 
 ```bash
-nai generate status <app-id> --json
+nextloom generate status <app-id> --json
 ```
 
 For long-running generations, check the current pipeline stage. Poll every 5 seconds if needed.
@@ -80,7 +80,7 @@ For long-running generations, check the current pipeline stage. Poll every 5 sec
 
 If the user says "generate a cover letter for Stripe" but has multiple Stripe applications:
 
-1. Run `nai app list --search "stripe" --json`
+1. Run `nextloom app list --search "stripe" --json`
 2. Show the matching applications
 3. Ask which one
 
@@ -91,23 +91,23 @@ Default is Markdown (`.md`). To get other formats, the user can open the generat
 ## Pro Tips
 
 - **Review before sending**: AI-generated documents are excellent starting points, but always review and personalize before submitting.
-- **Update your master resume**: Better input → better output. Periodically review `nai resume view --json`.
+- **Update your master resume**: Better input → better output. Periodically review `nextloom resume view --json`.
 - **Generate fresh per application**: Don't reuse a cover letter generated for Stripe when applying to Vercel. Each company deserves a tailored document.
-- **ATS scores are visible**: After generating a resume, `nai app view <id> --json` shows the ATS score. Aim for 80+.
+- **ATS scores are visible**: After generating a resume, `nextloom app view <id> --json` shows the ATS score. Aim for 80+.
 
 ## Error Handling
 
 | Error | What to do |
 |-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nai auth login`. |
-| `exit code 3` | Generation failed or timed out. Check `nai generate status <app-id> --json`. May need retry. |
-| No app-id | Run `nai app list --json` to find applications. Offer to help add one. |
+| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
+| `exit code 3` | Generation failed or timed out. Check `nextloom generate status <app-id> --json`. May need retry. |
+| No app-id | Run `nextloom app list --json` to find applications. Offer to help add one. |
 | No resume | "You haven't uploaded a master resume yet. Go to https://nextloom.ai/resume to upload one, then I can generate tailored documents." |
 | Generation loops | ATS check may be failing repeatedly. Consider reviewing/reuploading your master resume. |
 
 ## What This Skill Does NOT Do
 
-- Does NOT add applications — use `nextloom-apply` or `nai app add`
+- Does NOT add applications — use `nextloom-apply` or `nextloom app add`
 - Does NOT send emails — it generates the text, you send it
 - Does NOT guarantee ATS pass — it optimizes but can't guarantee every system
 - Does NOT bypass the async pipeline — generation takes real time

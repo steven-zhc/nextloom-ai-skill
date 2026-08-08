@@ -15,7 +15,7 @@ Nextloom AI helps you manage the entire job application lifecycle:
 - **Generate** follow-up emails, thank-you notes, and interview prep
 - **Autofill** on 17+ ATS platforms (Greenhouse, Lever, Workday, etc.)
 
-The CLI (`nai`) exposes all of this from the terminal. These skills teach your AI agent how to use the CLI so you can manage your job search by talking to it.
+The CLI (`nextloom`, also available as `nai`) exposes all of this from the terminal. These skills teach your AI agent how to use the CLI so you can manage your job search by talking to it.
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ cp -r nextloom-ai-skill/skills/* .opencode/skills/
 | [`nextloom-track`](skills/nextloom-track/SKILL.md) | Track & manage applications | "Show my applications" |
 | [`nextloom-docs`](skills/nextloom-docs/SKILL.md) | Generate tailored documents | "Write a cover letter for Stripe" |
 | [`nextloom-profile`](skills/nextloom-profile/SKILL.md) | Profile management | "Update my profile" |
-| [`nextloom-help`](skills/nextloom-help/SKILL.md) | CLI discovery & help — find commands at runtime | "What can nai do?" / any unknown command |
+| [`nextloom-help`](skills/nextloom-help/SKILL.md) | CLI discovery & help — find commands at runtime | "What can nextloom do?" / any unknown command |
 
 ## Usage Examples
 
@@ -94,7 +94,7 @@ After installing, just talk to your AI agent naturally:
 - **"Show my active applications"** → `nextloom-track` lists and filters applications
 - **"Generate a thank-you note for my Stripe interview"** → `nextloom-docs` generates the document
 - **"Add React and TypeScript to my skills"** → `nextloom-profile` updates your profile
-- **"What else can nai do?"** → `nextloom-help` discovers CLI commands at runtime
+- **"What else can nextloom do?"** → `nextloom-help` discovers CLI commands at runtime
 
 ## Skill Format
 
@@ -118,20 +118,20 @@ All commands support `--json` for structured output and `--env dev|prod` for env
 
 | Command | Description |
 |---------|-------------|
-| `nai auth login` | Browser-based OAuth login |
-| `nai auth whoami` | Show current user |
-| `nai profile view` | View your profile |
-| `nai profile edit --field <key> <value>` | Edit a profile field |
-| `nai profile skill add <skill>` | Add a skill |
-| `nai app list` | List applications (supports --status, --search, --sort) |
-| `nai app add <url>` | Add a job from URL (AI-parsed) |
-| `nai app view <id>` | View application details |
-| `nai app update <id> --status <status>` | Update application status |
-| `nai resume view` | View your master resume |
-| `nai generate resume <app-id>` | Generate a tailored resume |
-| `nai generate cover-letter <app-id>` | Generate a tailored cover letter |
-| `nai generate follow-up <app-id>` | Generate a follow-up email |
-| `nai generate thank-you <app-id>` | Generate a thank-you note |
+| `nextloom auth login` | Browser-based OAuth login |
+| `nextloom auth whoami` | Show current user |
+| `nextloom profile view` | View your profile |
+| `nextloom profile edit --field <key> <value>` | Edit a profile field |
+| `nextloom profile skill add <skill>` | Add a skill |
+| `nextloom app list` | List applications (supports --status, --search, --sort) |
+| `nextloom app add <url>` | Add a job from URL (AI-parsed) |
+| `nextloom app view <id>` | View application details |
+| `nextloom app update <id> --status <status>` | Update application status |
+| `nextloom resume view` | View your master resume |
+| `nextloom generate resume <app-id>` | Generate a tailored resume |
+| `nextloom generate cover-letter <app-id>` | Generate a tailored cover letter |
+| `nextloom generate follow-up <app-id>` | Generate a follow-up email |
+| `nextloom generate thank-you <app-id>` | Generate a thank-you note |
 
 ## License
 
