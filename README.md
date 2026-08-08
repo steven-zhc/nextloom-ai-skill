@@ -61,6 +61,7 @@ cp -r nextloom-ai-skill/skills/* .codex/skills/
 | [`nextloom-track`](skills/nextloom-track/SKILL.md) | Track & manage applications | "Show my applications" |
 | [`nextloom-docs`](skills/nextloom-docs/SKILL.md) | Generate tailored documents | "Write a cover letter for Stripe" |
 | [`nextloom-profile`](skills/nextloom-profile/SKILL.md) | Profile management | "Update my profile" |
+| [`nextloom-help`](skills/nextloom-help/SKILL.md) | CLI discovery & help — find commands at runtime | "What can nai do?" / any unknown command |
 
 ## Usage Examples
 
