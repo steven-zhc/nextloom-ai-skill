@@ -1,6 +1,9 @@
 ---
 name: nextloom-docs
 description: Generate tailored job application documents with Nextloom AI — resumes, cover letters, follow-up emails, thank-you notes. Use when the user says "write a cover letter", "generate a resume for", "create a follow-up", "thank-you note", or any document generation request.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — Document Generation

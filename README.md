@@ -1,6 +1,10 @@
 # Nextloom AI Skills
 
-Skills for using [Nextloom AI](https://nextloom.ai) — your AI-powered job search assistant — directly inside Claude Code and Codex.
+[![Install with skills CLI](https://img.shields.io/badge/skills.sh-steven--zhc/nextloom--ai--skill-blue?style=flat&logo=github)](https://skills.sh/steven-zhc/nextloom-ai-skill)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Agent Skills](https://img.shields.io/badge/standard-agentskills.io-6e56cf)](https://agentskills.io)
+
+Skills for using [Nextloom AI](https://nextloom.ai) — your AI-powered job search assistant — directly inside Claude Code, Codex, Cursor, Windsurf, OpenCode, and any agent that supports the [Agent Skills](https://agentskills.io) standard.
 
 ## What is Nextloom AI?
 
@@ -11,7 +15,7 @@ Nextloom AI helps you manage the entire job application lifecycle:
 - **Generate** follow-up emails, thank-you notes, and interview prep
 - **Autofill** on 17+ ATS platforms (Greenhouse, Lever, Workday, etc.)
 
-The CLI (`nai`) exposes all of this from the terminal. These skills teach Claude Code / Codex how to use the CLI so you can manage your job search by talking to your AI agent.
+The CLI (`nai`) exposes all of this from the terminal. These skills teach your AI agent how to use the CLI so you can manage your job search by talking to it.
 
 ## Prerequisites
 
@@ -21,34 +25,53 @@ The CLI (`nai`) exposes all of this from the terminal. These skills teach Claude
    curl -fsSL https://nextloom.ai/install.sh | bash
    ```
 
-   Or download directly from [GitHub Releases](https://github.com/nextloom-ai/nextloom-ai-cli/releases).
-
-2. **Verify installation**:
-
-   ```bash
-   nai --version
-   ```
-
-3. **Create an account** at [nextloom.ai](https://nextloom.ai) (free tier available).
+2. **Create an account** at [nextloom.ai](https://nextloom.ai) (free tier available).
 
 ## Installation
 
-Clone this repo and copy the skills into your project:
+### Option 1: `skills` CLI (recommended — 72+ agents)
+
+The universal skill package manager. Works with Claude Code, Codex, Cursor, and more:
+
+```bash
+npx skills add steven-zhc/nextloom-ai-skill
+```
+
+Installs all skills into `./.claude/skills/nextloom-*` (project) or use `-g` for global.
+
+### Option 2: Claude Code Plugin Marketplace
+
+```bash
+claude
+```
+
+Then inside Claude Code:
+
+```
+/plugin marketplace add steven-zhc/nextloom-ai-skill
+/plugin install nextloom-ai@nextloom-ai-skill
+```
+
+### Option 3: Manual Copy
 
 ```bash
 git clone https://github.com/steven-zhc/nextloom-ai-skill.git
 ```
 
-### For Claude Code
+Then copy to your agent's skills directory:
 
 ```bash
+# Claude Code
 cp -r nextloom-ai-skill/skills/* .claude/skills/
-```
 
-### For Codex
-
-```bash
+# Codex
 cp -r nextloom-ai-skill/skills/* .codex/skills/
+
+# Cursor
+cp -r nextloom-ai-skill/skills/* .cursor/skills/
+
+# OpenCode / Windsurf
+cp -r nextloom-ai-skill/skills/* .opencode/skills/
 ```
 
 ## Available Skills
@@ -65,12 +88,29 @@ cp -r nextloom-ai-skill/skills/* .codex/skills/
 
 ## Usage Examples
 
-After installing the skills, just talk to Claude Code or Codex naturally:
+After installing, just talk to your AI agent naturally:
 
-- **"Apply to the Staff Engineer role at Vercel"** → `nextloom-apply` skill handles auth, job parsing, and resume generation
+- **"Apply to the Staff Engineer role at Vercel"** → `nextloom-apply` handles auth, job parsing, and resume generation
 - **"Show my active applications"** → `nextloom-track` lists and filters applications
 - **"Generate a thank-you note for my Stripe interview"** → `nextloom-docs` generates the document
 - **"Add React and TypeScript to my skills"** → `nextloom-profile` updates your profile
+- **"What else can nai do?"** → `nextloom-help` discovers CLI commands at runtime
+
+## Skill Format
+
+All skills follow the [Agent Skills](https://agentskills.io) standard (`SKILL.md` with YAML frontmatter):
+
+```yaml
+---
+name: nextloom-apply
+description: Complete Nextloom AI application workflow ...
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
+---
+```
+
+Compatible with any agent that supports the standard — Claude Code, Codex, Cursor, Windsurf, OpenCode, Gemini CLI, Copilot, and 60+ more.
 
 ## CLI Reference
 

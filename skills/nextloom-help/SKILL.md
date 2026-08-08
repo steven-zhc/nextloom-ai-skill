@@ -1,6 +1,9 @@
 ---
 name: nextloom-help
 description: Discover and look up Nextloom AI CLI commands at runtime. Use when the user asks "what can nai do", "nai help", "help with nextloom", "what commands", or when a user request doesn't match any specific nextloom skill and you need to find the right CLI command.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — CLI Discovery & Help

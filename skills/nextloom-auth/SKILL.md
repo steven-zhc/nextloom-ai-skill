@@ -1,6 +1,9 @@
 ---
 name: nextloom-auth
 description: Nextloom AI authentication — login, logout, check who's logged in. Use when the user says "log into Nextloom", "sign in to nextloom", "nextloom login", "check nextloom auth", or auth-related commands.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — Authentication

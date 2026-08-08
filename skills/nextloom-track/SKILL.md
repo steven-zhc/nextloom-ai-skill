@@ -1,6 +1,9 @@
 ---
 name: nextloom-track
 description: Track and manage Nextloom AI job applications — list, filter, update status, delete. Use when the user asks "show my applications", "what's my application status", "update my Stripe application", "jobs I applied to", or anything about tracking job applications.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — Application Tracking

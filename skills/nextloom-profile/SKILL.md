@@ -1,6 +1,9 @@
 ---
 name: nextloom-profile
 description: Manage your Nextloom AI profile — view, edit fields, manage skills. Use when the user says "update my profile", "add a skill", "change my title", "what's in my profile", or anything about their Nextloom profile.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — Profile Management

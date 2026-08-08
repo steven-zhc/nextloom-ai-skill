@@ -1,6 +1,9 @@
 ---
 name: nextloom
 description: Nextloom AI job search assistant — manage applications, generate tailored resumes & cover letters, track status. Use when the user mentions "apply to this job", "show my applications", "write a cover letter", "track applications", "update my profile", or anything job-search related.
+license: MIT
+compatibility: claude-code, codex, cursor, opencode, windsurf
+required_tools: terminal
 ---
 
 # Nextloom AI — Job Search Assistant
