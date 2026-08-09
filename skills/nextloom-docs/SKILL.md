@@ -8,106 +8,119 @@ required_tools: terminal
 
 # Nextloom AI — Document Generation
 
-Generate AI-tailored documents for your job applications. Each document is customized to the specific role and company using the job description from your application.
+Generate documents tailored to a specific application, using its job description and the user's master resume.
+
+Verified against CLI **v0.23.2**.
 
 ## Prerequisites
 
-1. Run `nextloom auth whoami --json`. If exit code 4 → `nextloom auth login`.
-2. You need an application ID. Run `nextloom app list --json` to find the right one.
-3. A master resume must exist (`nextloom resume view --json`). If empty, direct to https://nextloom.ai/resume.
+```bash
+nextloom auth whoami --json
+nextloom app list --json
+nextloom resume view --json
+```
+
+Exit code 4 → `nextloom auth login`. You need an application id from the second. If the third shows no resume, run `nextloom resume import <file>` first — every generator reads from the master resume.
+
+## How Generation Behaves
+
+All four generators share the same contract:
+
+- One positional argument: the **application id**.
+- `--output <path>` chooses the destination, `--format <fmt>` the format.
+- **The CLI waits, streams each step, and downloads the file before returning.** Do not poll, do not background it.
+- Without `--output`, the file is saved under the same name the web app uses, so the two never diverge.
 
 ## Document Types
 
-### 1. Tailored Resume
+### Tailored Resume
 
 ```bash
-nextloom generate resume <app-id> --json
+nextloom generate resume app_a1b2c3 --json
+nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf
 ```
 
-Rewrites your master resume to match the specific job requirements. Highlights relevant experience, reorders skills to match the job description, and uses keywords from the posting for ATS optimization.
+Rewrites the master resume against the posting: relevant experience first, skills reordered, keywords aligned for ATS.
 
-**When to use**: Before applying to any job. Even if you already have a good resume, the AI tailoring improves ATS scores significantly.
+Five steps — benchmark → tailor → ATS check → humanize → final check. Typically 30–90 seconds. When the ATS check rejects a draft the pipeline returns to tailoring, so a **retry in the output is expected behavior**, not a failure.
 
-**Pipeline**: Queue → Benchmark → Tailor → ATS Check → Humanize → Final Check (30-120 seconds)
+Default name: `<Your_Name>_Resume_<Company>.<ext>`.
 
-**Output**: `FirstName_LastName_Resume_CompanyName.md` (also available as `.docx`, `.pdf`)
+**When to use**: before applying to anything.
 
-### 2. Cover Letter
+### Cover Letter
 
 ```bash
-nextloom generate cover-letter <app-id> --json
+nextloom generate cover-letter app_a1b2c3 --json
+nextloom generate cover-letter app_a1b2c3 --output ./cl.pdf --format pdf
 ```
 
-Generates a role-specific cover letter that connects your experience to the company's needs. Written in a professional but warm tone.
+Three steps — match profile → write → humanize. Default name: `<Your_Name>_Cover_Letter_<Company>.<ext>`.
 
-**When to use**: When the application requires or accepts a cover letter. Even when optional, a good cover letter sets you apart.
+**When to use**: whenever the application accepts one.
 
-**Output**: `FirstName_LastName_CoverLetter_CompanyName.md`
-
-### 3. Follow-Up Email
+### Follow-Up
 
 ```bash
-nextloom generate follow-up <app-id> --json
+nextloom generate follow-up app_a1b2c3 --json
 ```
 
-A polite follow-up email for when you haven't heard back after applying. References your application date and expresses continued interest.
+Single processing step. Renders as JSON and saves as `follow-up-<app-id>.json` — the web app has no download name for these, so the CLI does not invent one.
 
-**When to use**: 1-2 weeks after applying with no response. Don't send sooner — it can come across as pushy.
+**When to use**: one to two weeks after applying with no response.
 
-**Output**: `FirstName_LastName_FollowUp_CompanyName.md`
-
-### 4. Thank-You Note
+### Thank-You Note
 
 ```bash
-nextloom generate thank-you <app-id> --json
+nextloom generate thank-you app_a1b2c3 --json
 ```
 
-A post-interview thank-you note that references specific topics discussed. Shows engagement and professionalism.
+Single step. Saves as `thank-you-<app-id>.json`.
 
-**When to use**: Within 24 hours after an interview. Promptness matters.
+**When to use**: within 24 hours of an interview.
 
-**Output**: `FirstName_LastName_ThankYou_CompanyName.md`
-
-### Check Generation Status
+## Checking an Async Job
 
 ```bash
-nextloom generate status <app-id> --json
+nextloom generate status job_x1y2z3 --json
 ```
 
-For long-running generations, check the current pipeline stage. Poll every 5 seconds if needed.
+**This takes a job id, not an application id.** The job id appears in the generation command's output (`Generating resume for app_a1b2c3 (job job_x1y2z3)`) and in the `job_id` field of `--json` output.
+
+Use it only to recover — after an exit code 3, or a `--no-wait` import. Not as a polling loop.
+
+The response reports `status`, the current pipeline step, and the `aggregate_id` of the application. Follow-ups and thank-you notes have no pipeline, so they report no step.
 
 ## Choosing the Right Application
 
-If the user says "generate a cover letter for Stripe" but has multiple Stripe applications:
+If the user says "a cover letter for Stripe" and there are several:
 
-1. Run `nextloom app list --search "stripe" --json`
-2. Show the matching applications
-3. Ask which one
+```bash
+nextloom app list --search stripe --json
+```
 
-## Output Formats
-
-Default is Markdown (`.md`). To get other formats, the user can open the generated file and convert it. The Nextloom web app also offers `.docx` and `.pdf` export.
+Show the matches with role and status, and ask which one. Never guess.
 
 ## Pro Tips
 
-- **Review before sending**: AI-generated documents are excellent starting points, but always review and personalize before submitting.
-- **Update your master resume**: Better input → better output. Periodically review `nextloom resume view --json`.
-- **Generate fresh per application**: Don't reuse a cover letter generated for Stripe when applying to Vercel. Each company deserves a tailored document.
-- **ATS scores are visible**: After generating a resume, `nextloom app view <id> --json` shows the ATS score. Aim for 80+.
+- **Review before sending.** These are strong drafts, not finished correspondence.
+- **Keep the master resume current** — `nextloom resume view --json`.
+- **Regenerating replaces the existing document and uses quota.** The CLI warns; pass that warning on before you re-run.
+- **Check what already exists** with `nextloom app view <id> --docs` before generating.
 
 ## Error Handling
 
-| Error | What to do |
-|-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
-| `exit code 3` | Generation failed or timed out. Check `nextloom generate status <app-id> --json`. May need retry. |
-| No app-id | Run `nextloom app list --json` to find applications. Offer to help add one. |
-| No resume | "You haven't uploaded a master resume yet. Go to https://nextloom.ai/resume to upload one, then I can generate tailored documents." |
-| Generation loops | ATS check may be failing repeatedly. Consider reviewing/reuploading your master resume. |
+| Symptom | What to do |
+|---------|-----------|
+| Exit code 4 | Run `nextloom auth login` |
+| Exit code 3 | Failed or timed out. The job may still finish — check `nextloom generate status <job-id>`. |
+| Exit code 2 | Wrong argument shape. Generators take exactly one application id. |
+| No application id | `nextloom app list --json`, or offer to add one |
+| No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
+| Repeated retries in the pipeline | The ATS check keeps rejecting. Suggest reviewing the master resume. |
 
 ## What This Skill Does NOT Do
 
 - Does NOT add applications — use `nextloom-apply` or `nextloom app add`
-- Does NOT send emails — it generates the text, you send it
-- Does NOT guarantee ATS pass — it optimizes but can't guarantee every system
-- Does NOT bypass the async pipeline — generation takes real time
+- Does NOT send email — it writes the text, the user sends it
+- Does NOT guarantee any ATS will pass the document

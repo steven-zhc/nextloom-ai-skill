@@ -8,108 +8,138 @@ required_tools: terminal
 
 # Nextloom AI — Apply Workflow
 
-Complete end-to-end job application workflow. Takes the user from a job posting to polished, tailored documents ready for submission.
+End-to-end: from a job posting to tailored documents ready for submission.
 
-## Prerequisites Check
+Verified against CLI **v0.23.2**.
 
-Before starting, verify:
-
-1. **Auth**: Run `nextloom auth whoami --json`. If exit code 4, tell the user to run `nextloom auth login` first.
-2. **Resume**: Run `nextloom resume view --json`. If no resume exists, direct the user to https://nextloom.ai/resume to upload their master resume.
-
-## Workflow
-
-### Step 1 — Capture the Job
-
-If the user provides a URL:
+## Prerequisites
 
 ```bash
-nextloom app add "<job-posting-url>" --json
+nextloom auth whoami --json
+nextloom resume view --json
 ```
 
-If the user provides a description (company + role):
+Exit code 4 on the first means the user must run `nextloom auth login` — stop there. If the second shows no resume, import one with `nextloom resume import <file>` before generating anything; tailoring works from the master resume.
+
+## Step 1 — Capture the Job
+
+**The job description text is what matters.** Company, title, required skills, and keywords are extracted from it by AI. `app add` takes no positional argument — always use a flag.
+
+Best, when you have the posting text:
 
 ```bash
-nextloom app add "<Company Name> - <Role Title>" --json
+nextloom app add --file jd.txt --json
 ```
 
-The CLI parses the job posting with AI and extracts: company, title, required skills, qualifications, and job description. Save the returned application `id`.
+Piping from the clipboard works too:
 
-Present a summary to the user before proceeding:
+```bash
+nextloom app add --file - --json
+```
 
-> **Added**: [Role Title] at [Company Name]
-> **Skills required**: [extracted skills]
-> **App ID**: [id]
+Inline text:
+
+```bash
+nextloom app add --detail "We are hiring a Senior Engineer at Acme Corp..." --json
+```
+
+If the user gives you only a link:
+
+```bash
+nextloom app add --url https://acme.example/jobs/42 --json
+```
+
+**A bare `--url` does not parse the posting.** It stores the link and creates a near-empty record — no company, no title, no keywords — which produces poor tailoring downstream. When you only have a URL, fetch the posting text yourself and pass it via `--detail`, or tell the user the record will be thin and ask them to paste the description.
+
+Passing both is fine: `--detail` wins over `--url`.
+
+Backdating an application the user already submitted:
+
+```bash
+nextloom app add --file jd.txt --applied-date 2026-01-15 --json
+```
+
+Extraction runs before the command returns. Add `--no-wait` to return immediately and check later with `nextloom app view <id>`.
+
+Save the returned `id`, then summarize for the user:
+
+> **Added**: Senior Engineer at Acme Corp — `app_a1b2c3`
+> **Match**: 71%
+> **Skills**: TypeScript · React · PostgreSQL
 >
-> Ready to generate tailored documents?
+> Generate a tailored resume and cover letter?
 
-### Step 2 — Generate Tailored Resume
+## Step 2 — Generate Tailored Resume
 
 ```bash
-nextloom generate resume <app-id> --json
+nextloom generate resume app_a1b2c3 --json
 ```
 
-This runs an async pipeline:
-- **Queue** → job enters the generation queue
-- **Benchmark** → scored against current market standards
-- **Tailor** → resume rewritten for this specific role
-- **ATS Check** → scanned for ATS compatibility
-- **Humanize** → natural language polish
-- **Final Check** → quality gate
+Five steps: benchmark → tailor → ATS check → humanize → final check. **The CLI waits and streams progress — do not poll.** Typically 30–90 seconds.
 
-The process takes 30–120 seconds. Poll the status every 5 seconds:
+A retry in the output is normal. When the ATS check rejects a draft the pipeline loops back to tailoring, which is why a run can exceed a minute.
+
+Choose the format and destination:
 
 ```bash
-nextloom generate status <app-id> --json
+nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf
 ```
 
-When complete, share the output file path with the user. The file is named like `Ada_Lovelace_Resume_Acme_Corp.md`.
+Without `--output`, the file lands under the same name the web app uses: `<Your_Name>_Resume_<Company>.<ext>`.
 
-If the ATS check rejects (score too low), the system auto-retries once. If it fails again, tell the user the ATS score and suggest they review and manually adjust their master resume.
-
-### Step 3 — Generate Cover Letter
+## Step 3 — Generate Cover Letter
 
 ```bash
-nextloom generate cover-letter <app-id> --json
+nextloom generate cover-letter app_a1b2c3 --json
 ```
 
-Same async pipeline, different output. When done, share the file path.
+Three steps: match profile → write → humanize.
 
-### Step 4 — Mark as Applied
+## Step 4 — Mark as Applied
 
-After the user confirms they've submitted their application:
+After the user confirms they submitted:
 
 ```bash
-nextloom app update <app-id> --status Applied --json
+nextloom app update app_a1b2c3 --status Applied --json
 ```
 
-### Optional: Generate Additional Documents
+## Optional Documents
 
 ```bash
-nextloom generate follow-up <app-id> --json   # If no response after 1-2 weeks
-nextloom generate thank-you <app-id> --json   # After an interview
+nextloom generate follow-up app_a1b2c3 --json
+nextloom generate thank-you app_a1b2c3 --json
+```
+
+Follow-ups and thank-you notes render as JSON and save as `follow-up-<app-id>.json` / `thank-you-<app-id>.json`.
+
+## Recovering an Interrupted Generation
+
+If a generation exits 3, or you used `--no-wait`, the job may still be running server-side. Check it with the **job id** from the command's output — not the application id:
+
+```bash
+nextloom generate status job_x1y2z3 --json
 ```
 
 ## Pro Tips
 
-- **Multiple applications**: Process one at a time. The generation pipeline is per-application.
-- **ATS score is visible**: After generation, `nextloom app view <id> --json` shows the ATS score in the application details.
-- **Resume quality matters**: Better master resume → better tailoring results. Encourage the user to keep their master resume updated.
-- **Job descriptions**: Better input (full JD with requirements) → better AI parsing → better tailored output.
+- **Better input, better output.** A full job description with requirements beats a title and company.
+- **One application at a time.** Generation is per-application.
+- **Fresh per company.** Don't reuse a cover letter written for one employer at another.
+- **Regenerating costs quota** and replaces the existing document. The CLI warns first.
 
 ## Error Handling
 
-| Error | What to do |
-|-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
-| `exit code 3` | Generation failed. Check `nextloom generate status <app-id> --json` for details. |
-| App add returns empty | The URL may not be parseable. Ask the user for company and role manually. |
-| Resume generation loops | ATS score may be persistently low. Suggest the user review their master resume. |
-| "No resume found" | User needs to upload a master resume at https://nextloom.ai/resume. |
+| Symptom | What to do |
+|---------|-----------|
+| Exit code 4 | Run `nextloom auth login` |
+| Exit code 3 | Generation failed or timed out. Check `nextloom generate status <job-id>`. Offer to retry. |
+| Exit code 2 on `app add` | Usually a positional argument. Use `--detail`, `--file`, or `--url`. |
+| Application created with no company or title | Added by `--url` alone. Re-add with the description text. |
+| No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
+| Generation keeps retrying | The ATS check is rejecting drafts. Suggest reviewing the master resume. |
 
 ## What This Skill Does NOT Do
 
 - Does NOT submit the application to the employer — it generates documents only
-- Does NOT fill in application forms — use the Nextloom Chrome Extension for that
-- Does NOT create a Nextloom account — users must sign up first
-- Does NOT bypass the async pipeline — generation takes real time, be patient
+- Does NOT fill in application forms — use the Nextloom Chrome extension
+- Does NOT create a Nextloom account — sign up first

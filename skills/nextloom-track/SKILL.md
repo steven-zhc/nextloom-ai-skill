@@ -8,71 +8,85 @@ required_tools: terminal
 
 # Nextloom AI — Application Tracking
 
-View, filter, and manage your job applications through the `nextloom` CLI.
+View, filter, and manage job applications through the `nextloom` CLI.
+
+Verified against CLI **v0.23.2**.
 
 ## Prerequisites
 
-Run `nextloom auth whoami --json` first. If not authenticated (exit code 4), direct the user to `nextloom auth login`.
+```bash
+nextloom auth whoami --json
+```
 
-## Commands
+Exit code 4 → the user must run `nextloom auth login`.
 
-### List Applications
+## List Applications
 
 ```bash
-# All applications
 nextloom app list --json
-
-# Filter by status
 nextloom app list --status Interviewing --json
-nextloom app list --status Applied --json
-
-# Search by company name
-nextloom app list --search "stripe" --json
-
-# Sort (default: newest first)
-nextloom app list --sort created --json
-nextloom app list --sort updated --json
+nextloom app list --search stripe --json
+nextloom app list --sort applied_date --order asc --json
 ```
 
-Present applications in a clean table:
+| Flag | Values |
+|------|--------|
+| `--status` | New, Applied, Screening, Interviewing, Offered, Declined, Accepted, Withdrawn, Archived |
+| `--search` | Company name, case-insensitive |
+| `--sort` | `applied_date`, `company_name`, `status`, `interview_date`, `followup_date` |
+| `--order` | `asc` or `desc`. Default `desc` |
 
-| # | Company | Role | Status | Updated |
-|---|---------|------|--------|---------|
-| 1 | Stripe | Backend Engineer | Interviewing | 2 days ago |
-| 2 | Vercel | Staff Engineer | Applied | 1 week ago |
+There is no `created` or `updated` sort field — use `applied_date`.
 
-### View Application Details
+The human-readable table gives id, status, match score, applied date, and company. The `--json` form returns full records; summarize rather than dumping them:
+
+| Company | Role | Status | Match | Applied |
+|---------|------|--------|-------|---------|
+| Acme Corp | Senior Engineer | Applied | 71% | 2026-08-01 |
+| Initech | Staff Engineer | Interviewing | 100% | 2026-07-14 |
+
+## View One Application
 
 ```bash
-nextloom app view <app-id> --json
+nextloom app view app_a1b2c3 --json
+nextloom app view app_a1b2c3 --docs
+nextloom app view app_a1b2c3 --full
 ```
 
-Shows full details: company, role, status, job description, skills, ATS score, and generated documents. Present the key information — don't dump the full JSON.
+The default view shows company, title, status, applied date, location, salary, URL, skills, and requirements — with the long description hidden.
 
-### Update Application Status
+- `--docs` adds which documents exist (resume, cover letter, follow-up, thank-you).
+- `--full` adds the complete job description.
+
+## Update Status
 
 ```bash
-nextloom app update <app-id> --status <new-status> --json
+nextloom app update app_a1b2c3 --status Interviewing --json
 ```
 
-Valid status values:
-- **New** — just added, not yet applied
-- **Applied** — application submitted
-- **Screening** — recruiter screening / phone screen
-- **Interviewing** — in the interview process
-- **Offered** — received an offer
-- **Declined** — application rejected
-- **Accepted** — offer accepted 🎉
-- **Withdrawn** — you withdrew
-- **Archived** — hidden from active view
+`--status` is required.
 
-### Delete an Application
+| Status | Meaning |
+|--------|---------|
+| New | Added, not yet applied |
+| Applied | Application submitted |
+| Screening | Recruiter screen / phone screen |
+| Interviewing | In the interview process |
+| Offered | Offer received |
+| Declined | Rejected |
+| Accepted | Offer accepted |
+| Withdrawn | The user withdrew |
+| Archived | Hidden from the active view |
+
+## Delete an Application
 
 ```bash
-nextloom app delete <app-id>
+nextloom app delete app_a1b2c3 --force --json
 ```
 
-Ask for confirmation before deleting. This is irreversible.
+**`--force` is mandatory for you.** The command prompts for interactive confirmation, and refuses outright when output is `--json` or stdin is not a terminal — which is always the case when an agent runs it. Without `--force` you get an error, not a prompt.
+
+Deletion is irreversible. Ask the user first, show them what will be deleted, and only then pass `--force`.
 
 ## Common Workflows
 
@@ -82,41 +96,37 @@ Ask for confirmation before deleting. This is irreversible.
 nextloom app list --json
 ```
 
-Show the user their active applications (exclude Archived) sorted by last update. Highlight any that need action (e.g., "Applied 2 weeks ago — time for a follow-up?").
+Show active applications, exclude Archived, and flag anything that needs action — "applied three weeks ago, no response; want a follow-up?"
 
 ### Interview Prep
 
 ```bash
-# 1. Find the application
 nextloom app list --status Interviewing --json
-
-# 2. Get full details
-nextloom app view <app-id> --json
-
-# 3. Generate prep materials
-nextloom generate resume <app-id> --json    # Refresh tailored resume
-nextloom generate cover-letter <app-id> --json  # Review your pitch
+nextloom app view app_g7h8i9 --full
 ```
+
+Read the requirements and description back to the user, then offer `nextloom generate thank-you` afterwards.
 
 ### Pipeline Overview
 
-Show a summary across all statuses:
+Count by status from a single `nextloom app list --json` — don't run one call per status.
 
 ```
-📊 Pipeline Overview
-New: 3 | Applied: 12 | Screening: 2 | Interviewing: 4 | Offered: 1 | Declined: 5
+New 3 · Applied 12 · Screening 2 · Interviewing 4 · Offered 1 · Declined 5
 ```
 
 ## Error Handling
 
-| Error | What to do |
-|-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
-| Empty list | "You don't have any applications yet. Want to add one? Share a job posting URL." |
-| Invalid status | List the valid status values. Suggest the closest match. |
+| Symptom | What to do |
+|---------|-----------|
+| Exit code 4 | Run `nextloom auth login` |
+| Empty list | "No applications yet. Share a job posting and I'll add it." |
+| Delete refused | Add `--force` — after confirming with the user |
+| `Application not found` | Re-list; the id may be stale |
+| Invalid status | List the nine valid values and suggest the closest |
 
 ## What This Skill Does NOT Do
 
 - Does NOT add applications — use `nextloom-apply` or `nextloom app add`
 - Does NOT generate documents — use `nextloom-docs` or `nextloom generate`
-- Does NOT modify profile — use `nextloom-profile` or `nextloom profile`
+- Does NOT modify the profile — use `nextloom-profile`

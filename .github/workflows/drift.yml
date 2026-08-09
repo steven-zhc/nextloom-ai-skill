@@ -1,0 +1,36 @@
+name: drift
+
+# These skills describe a CLI they do not ship. When the CLI renames a command
+# or drops a flag, nothing here changes and nothing fails — the skills just
+# quietly start teaching agents to run commands that no longer exist. That is
+# exactly how they got into the state Feature 076 had to fix.
+#
+# So: check on every change, and check weekly even when nothing changes, because
+# the thing that breaks these files is a release in another repo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Mondays 07:00 UTC. The scheduled run is the one that catches a CLI
+    # release nobody told this repo about.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # On the schedule the fetch failing IS the signal worth waking up for, so
+      # it is fatal. On a PR it is noise from a third-party outage, so the
+      # script degrades to a warning — a red X people learn to ignore is worse
+      # than no check at all.
+      - name: Check skills against the live CLI reference
+        run: node scripts/check-drift.mjs ${{ github.event_name == 'schedule' && '--strict' || '' }}

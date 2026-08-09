@@ -114,24 +114,52 @@ Compatible with any agent that supports the standard — Claude Code, Codex, Cur
 
 ## CLI Reference
 
-All commands support `--json` for structured output and `--env dev|prod` for environment switching.
+Verified against CLI **v0.23.2**. Every command supports `--json` for structured output and `--env dev|prod` for environment switching.
 
 | Command | Description |
 |---------|-------------|
-| `nextloom auth login` | Browser-based OAuth login |
-| `nextloom auth whoami` | Show current user |
-| `nextloom profile view` | View your profile |
-| `nextloom profile edit --field <key> <value>` | Edit a profile field |
+| `nextloom auth login` | Browser-based PKCE OAuth login |
+| `nextloom auth whoami` | Show the signed-in account |
+| `nextloom auth logout` | Revoke and clear the local session |
+| `nextloom profile view` | View your profile (`--all`, `--eeo`, `--path`) |
+| `nextloom profile edit --field <path>=<value>` | Edit profile fields by dotted path |
 | `nextloom profile skill add <skill>` | Add a skill |
-| `nextloom app list` | List applications (supports --status, --search, --sort) |
-| `nextloom app add <url>` | Add a job from URL (AI-parsed) |
-| `nextloom app view <id>` | View application details |
+| `nextloom profile skill remove <skill>` | Remove a skill |
+| `nextloom app list` | List applications (`--status`, `--search`, `--sort`, `--order`) |
+| `nextloom app add --file <path>` | Add a job from a job-description file |
+| `nextloom app add --detail <text>` | Add a job from description text |
+| `nextloom app add --url <url>` | Add a job by URL — records the link only, does not parse it |
+| `nextloom app view <id>` | View an application (`--docs`, `--full`) |
 | `nextloom app update <id> --status <status>` | Update application status |
+| `nextloom app delete <id> --force` | Delete an application |
 | `nextloom resume view` | View your master resume |
+| `nextloom resume export --format <fmt>` | Export the resume as md or json |
+| `nextloom resume import <file>` | Import a resume file |
 | `nextloom generate resume <app-id>` | Generate a tailored resume |
 | `nextloom generate cover-letter <app-id>` | Generate a tailored cover letter |
 | `nextloom generate follow-up <app-id>` | Generate a follow-up email |
 | `nextloom generate thank-you <app-id>` | Generate a thank-you note |
+| `nextloom generate status <job-id>` | Check an async generation job |
+| `nextloom completion shell <shell>` | Print a shell completion script |
+
+The full machine-readable reference lives at [nextloom.ai/cli-reference.json](https://nextloom.ai/cli-reference.json), generated from the CLI's own command tree.
+
+### Three things that trip agents up
+
+1. **`app add` takes no positional argument.** Use `--detail`, `--file`, or `--url`. A bare `--url` records the link without parsing the posting.
+2. **`generate status` takes a job id**, not an application id.
+3. **`app delete` requires `--force`** under `--json` or any non-interactive shell.
+
+## Staying in Sync
+
+`scripts/check-drift.mjs` checks every command in these skills against the live CLI reference and fails when one no longer exists:
+
+```bash
+node scripts/check-drift.mjs
+node scripts/check-drift.mjs --ref /path/to/reference.json
+```
+
+It runs on every push and pull request, plus weekly so a new CLI release surfaces drift on its own. The check is structural — it verifies command paths, flag names, and argument counts, not that an argument is the right *kind* of value.
 
 ## License
 

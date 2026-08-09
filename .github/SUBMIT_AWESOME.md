@@ -14,7 +14,7 @@ cd awesome-claude-skills
 Add the following under the **Productivity & Organization** section in `README.md`:
 
 ```markdown
-- [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) - AI-powered job search assistant — track applications across companies, generate tailored resumes & cover letters per role, and manage your entire application lifecycle from your AI agent. Uses the Nextloom AI CLI (`nai`). *By [@steven-zhc](https://github.com/steven-zhc)*
+- [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) - AI-powered job search assistant — track applications across companies, generate tailored resumes & cover letters per role, and manage your entire application lifecycle from your AI agent. Uses the Nextloom AI CLI (`nextloom`). *By [@steven-zhc](https://github.com/steven-zhc)*
 ```
 
 ## Step 3: Commit & PR
