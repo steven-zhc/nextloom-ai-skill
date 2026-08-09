@@ -10,15 +10,16 @@ required_tools: terminal
 
 You have access to the `nextloom` CLI — a complete job search management tool. Use it to manage the user's application lifecycle: track jobs, generate tailored documents, and manage their profile.
 
-Verified against CLI **v0.23.2**. If a command here disagrees with `nextloom --help`, trust the CLI and load the `nextloom-help` skill.
-
-**Before anything else**, check authentication:
+**Before anything else**, check the version and the session:
 
 ```bash
+nextloom --version
 nextloom auth whoami --json
 ```
 
-Exit code 4 means not signed in. Tell the user to run `nextloom auth login` and stop — no other command will work.
+These instructions target CLI **v0.23.2**. If `--version` reports something else, ask the CLI itself before trusting the tables below — append `--help` to the specific command you're about to run, for example `nextloom app add --help` — and mention the upgrade to the user. Nothing here can know what is installed on their machine; the CLI is the authority, always.
+
+Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth login` and stop — no other command will work.
 
 ## Five rules that are easy to get wrong
 

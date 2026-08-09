@@ -152,14 +152,17 @@ The full machine-readable reference lives at [nextloom.ai/cli-reference.json](ht
 
 ## Staying in Sync
 
-`scripts/check-drift.mjs` checks every command in these skills against the live CLI reference and fails when one no longer exists:
+`cli-reference.json` in this repo is a pinned snapshot of the CLI's published command tree. `scripts/check-drift.mjs` checks every command written in these skills — in fenced blocks **and** in Markdown tables — against it.
 
 ```bash
-node scripts/check-drift.mjs
-node scripts/check-drift.mjs --ref /path/to/reference.json
+npm run check            # against the pin: hermetic, no network
+npm run check:live       # against https://nextloom.ai/cli-reference.json
+npm run sync:reference   # refresh the pin after a CLI release
 ```
 
-It runs on every push and pull request, plus weekly so a new CLI release surfaces drift on its own. The check is structural — it verifies command paths, flag names, and argument counts, not that an argument is the right *kind* of value.
+CI runs two jobs. On every push and pull request, the **gate** checks the skills against the pin — deterministic and offline, so a nextloom.ai outage can't fail an unrelated PR. Weekly, a **live** job diffs the published reference against the pin and fails if the CLI has moved; refreshing the pin is the moment to re-read the skills.
+
+The check is structural. It verifies command paths, flag names, and positional argument counts — not that an argument is the right *kind* of value, and not prose. Neither job can see which CLI version you have installed; that's why the skills tell your agent to run `nextloom --version` first.
 
 ## License
 

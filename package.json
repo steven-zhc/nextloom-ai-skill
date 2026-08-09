@@ -11,8 +11,9 @@
     "url": "https://github.com/steven-zhc/nextloom-ai-skill.git"
   },
   "scripts": {
-    "check": "node scripts/check-drift.mjs",
-    "check:strict": "node scripts/check-drift.mjs --strict"
+    "check": "node scripts/check-drift.mjs --ref cli-reference.json",
+    "check:live": "node scripts/check-drift.mjs --strict",
+    "sync:reference": "curl -fsSL https://nextloom.ai/cli-reference.json -o cli-reference.json"
   },
   "engines": {
     "node": ">=20"

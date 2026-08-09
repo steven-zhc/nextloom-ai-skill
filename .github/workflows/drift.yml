@@ -5,32 +5,76 @@ name: drift
 # quietly start teaching agents to run commands that no longer exist. That is
 # exactly how they got into the state Feature 076 had to fix.
 #
-# So: check on every change, and check weekly even when nothing changes, because
-# the thing that breaks these files is a release in another repo.
+# Two jobs, two different questions:
+#
+#   gate   — "do these skills match the CLI surface we pinned?"
+#            Reads the vendored cli-reference.json. Hermetic, no network, hard
+#            fail. A nextloom.ai outage cannot redden an unrelated PR, and the
+#            result is reproducible months later.
+#
+#   live   — "has the CLI moved past the pin?"
+#            Fetches the published reference weekly. Gates nothing, so it is
+#            free to be strict. When it goes red, refresh the pin with
+#            `npm run sync:reference` — and that bump is the moment to re-read
+#            the skills, which is the point.
+#
+# Neither job can see the CLI version a *user* has installed. That skew is
+# handled in the skills themselves, which tell the agent to run
+# `nextloom --version` and prefer `--help` on a mismatch.
 
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
-    # Mondays 07:00 UTC. The scheduled run is the one that catches a CLI
-    # release nobody told this repo about.
+    # Mondays 07:00 UTC.
     - cron: '0 7 * * 1'
   workflow_dispatch:
 
 jobs:
-  check:
+  gate:
+    name: skills match the pinned reference
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/check-drift.mjs --ref cli-reference.json
 
+  live:
+    name: pinned reference still matches the CLI
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # On the schedule the fetch failing IS the signal worth waking up for, so
-      # it is fatal. On a PR it is noise from a third-party outage, so the
-      # script degrades to a warning — a red X people learn to ignore is worse
-      # than no check at all.
-      - name: Check skills against the live CLI reference
-        run: node scripts/check-drift.mjs ${{ github.event_name == 'schedule' && '--strict' || '' }}
+      # Compare the published reference against the pin. A surface change with
+      # no version bump still shows up here, which is why this diffs content
+      # rather than trusting `.version`.
+      - name: Diff the published reference against the pin
+        run: |
+          curl -fsSL https://nextloom.ai/cli-reference.json -o live-reference.json
+          if diff -q <(jq -S . cli-reference.json) <(jq -S . live-reference.json) > /dev/null; then
+            echo "pin is current (v$(jq -r .version cli-reference.json))" >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "### The published CLI reference has moved past the pin"
+              echo ""
+              echo "pinned: v$(jq -r .version cli-reference.json)"
+              echo "live:   v$(jq -r .version live-reference.json)"
+              echo ""
+              echo "Refresh with \`npm run sync:reference\`, then re-read the skills before committing."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # Even when the pin is stale, the skills should still hold against the
+      # live surface. Run it so the failure says which of the two is wrong.
+      - name: Check skills against the live reference
+        if: always()
+        run: node scripts/check-drift.mjs --strict

@@ -134,11 +134,25 @@ const indexGroups = (commands) => {
 // ── Extract command lines from Markdown ───────────────────────────────
 
 /**
- * Pull every `nextloom ...` line out of fenced code blocks.
+ * Pull every `nextloom ...` command out of a Markdown file.
  *
- * Only fenced blocks count. Prose and inline code are not checked — a sentence
- * mentioning `nextloom app add` is not a promise about its exact shape.
+ * TWO representations, both checked:
+ *   - lines inside fenced code blocks
+ *   - inline code spans anywhere else — `` `nextloom app add --url <url>` ``
+ *
+ * Inline spans are not optional extra credit. The worst bug this repo ever
+ * shipped — a fabricated table of `profile edit` field names — lived in a
+ * Markdown table, not a fence. A fenced-only extractor rates that file clean.
+ * The README's CLI Reference table is the most copy-pasted surface here and is
+ * built entirely from inline spans.
+ *
+ * `nai` is the CLI's second installed name. Normalize it rather than skip it,
+ * so a command written that way is verified instead of silently ignored.
  */
+const BIN_PATTERN = /^(nextloom|nai)(\s|$)/
+
+const normalizeBin = (text) => text.replace(/^nai(\s|$)/, 'nextloom$1')
+
 const extractCommands = (markdown, file) => {
   const found = []
   let inFence = false
@@ -158,12 +172,22 @@ const extractCommands = (markdown, file) => {
       }
       return
     }
-    if (!inFence) return
 
-    const command = line.replace(/^\$\s+/, '') // drop a leading shell prompt
-    if (!/^nextloom(\s|$)/.test(command)) return
+    if (inFence) {
+      const command = line.replace(/^\$\s+/, '') // drop a leading shell prompt
+      if (BIN_PATTERN.test(command)) {
+        found.push({ file, line: index + 1, text: normalizeBin(command), source: 'block' })
+      }
+      return
+    }
 
-    found.push({ file, line: index + 1, text: command })
+    // Outside a fence: every inline code span is a candidate.
+    for (const match of rawLine.matchAll(/`([^`]+)`/g)) {
+      const command = match[1].trim().replace(/^\$\s+/, '')
+      if (BIN_PATTERN.test(command)) {
+        found.push({ file, line: index + 1, text: normalizeBin(command), source: 'inline' })
+      }
+    }
   })
 
   return found
