@@ -99,7 +99,9 @@ If the user says "a cover letter for Stripe" and there are several:
 nextloom app list --search stripe --json
 ```
 
-Show the matches with role and status, and ask which one. Never guess.
+Show the matches with company, status, and applied date, and ask which one. Never guess.
+
+`app list` returns no job title, so don't offer one to disambiguate. If company and date aren't enough, run `nextloom app view <id>` on the candidates to get the title.
 
 ## Pro Tips
 

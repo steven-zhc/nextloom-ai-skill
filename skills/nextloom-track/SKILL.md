@@ -38,12 +38,16 @@ nextloom app list --sort applied_date --order asc --json
 
 There is no `created` or `updated` sort field — use `applied_date`.
 
-The human-readable table gives id, status, match score, applied date, and company. The `--json` form returns full records; summarize rather than dumping them:
+The human-readable table gives id, status, match score, applied date, and company. The `--json` form adds the job url, follow-up and interview dates, source, and timestamps; summarize rather than dumping them:
 
-| Company | Role | Status | Match | Applied |
-|---------|------|--------|-------|---------|
-| Acme Corp | Senior Engineer | Applied | 71% | 2026-08-01 |
-| Initech | Staff Engineer | Interviewing | 100% | 2026-07-14 |
+| Company | Status | Match | Applied |
+|---------|--------|-------|---------|
+| Acme Corp | Applied | 71% | 2026-08-01 |
+| Initech | Interviewing | 100% | 2026-07-14 |
+
+**`app list` carries no job title.** Not in the table, not in `--json`. The title comes from the AI-parsed job detail, which the list endpoint does not return. Summarize by company — never invent or infer a role. If the user wants titles, say they need `nextloom app view <id>` per application, and ask before running it across a long list.
+
+When `company_name` is empty (import still running, or a URL-only record) the CLI prints the posting's hostname instead.
 
 ## View One Application
 
@@ -53,7 +57,7 @@ nextloom app view app_a1b2c3 --docs
 nextloom app view app_a1b2c3 --full
 ```
 
-The default view shows company, title, status, applied date, location, salary, URL, skills, and requirements — with the long description hidden.
+The default view shows company, job title, status, applied date, location, salary, URL, skills, and requirements — with the long description hidden. This is the only command that returns a job title (`job_detail.job_title` under `--json`), and it is absent until the background import has parsed the posting.
 
 - `--docs` adds which documents exist (resume, cover letter, follow-up, thank-you).
 - `--full` adds the complete job description.

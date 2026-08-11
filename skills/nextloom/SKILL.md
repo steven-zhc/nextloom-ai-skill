@@ -23,7 +23,7 @@ Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth
 
 ## Five rules that are easy to get wrong
 
-1. **`app add` takes no positional argument.** Pass the job description via `--detail` or `--file`. A bare `--url` saves the link but extracts nothing — no company, no title, no keywords.
+1. **`app add` takes no positional argument, and Nextloom never fetches a URL.** You must supply the posting text — `--file` for anything posting-sized, `--detail` only for short pasted text. A bare `--url` saves the link and runs no import at all: the record stays permanently empty. Pass `--url` *alongside* the text so the link is stored.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
 3. **`generate status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
@@ -37,21 +37,22 @@ Auth → Add Job → Generate Resume → Generate Cover Letter → Track Status 
 
 ### Step 1 — Add the Application
 
-Prefer the full job description. The company, title, and keywords are extracted by AI from the posting text.
+The company, title, and keywords are extracted by AI from the posting text — and only from text you provide. When the user gives you a link, fetch the page and extract the description yourself (JS-rendered boards like Greenhouse and Lever need their JSON endpoint, not the raw HTML), write it to a file, and pass the link along with it:
 
 ```bash
-nextloom app add --file jd.txt --json
+nextloom app add --file /tmp/jd.txt --url https://acme.example/jobs/42 --json
 ```
 
 Other ways in:
 
 ```bash
 nextloom app add --detail "We are hiring a Senior Engineer at Acme Corp..." --json
-nextloom app add --file - --json
-nextloom app add --url https://acme.example/jobs/42 --json
+pbpaste | nextloom app add --file - --url https://acme.example/jobs/42 --json
 ```
 
-`--file -` reads the posting from stdin. `--url` on its own only records the link — if that is all the user has, either fetch the posting text yourself and pass it via `--detail`, or tell them the record will be mostly empty.
+`--file -` reads the posting from stdin. Use `--detail` only for short text pasted into the conversation — a full description belongs in a file, since the shell mangles multi-KB text containing quotes and newlines.
+
+Adding with `--url` and no text is never right: no import runs, and the record stays empty. If the text cannot be obtained, tell the user instead of creating a blank record.
 
 Save the returned `id`. Every later step needs it.
 
@@ -115,9 +116,9 @@ nextloom app list --json
 nextloom app list --status Interviewing --json
 nextloom app list --search stripe --json
 nextloom app list --sort applied_date --order asc --json
-nextloom app add --file jd.txt --json
+nextloom app add --file jd.txt --url https://acme.example/jobs/42 --json
 nextloom app add --detail "<job description text>" --applied-date 2026-01-15 --json
-nextloom app add --url https://acme.example/jobs/42 --no-wait --json
+nextloom app add --file jd.txt --no-wait --json
 nextloom app view app_a1b2c3 --json
 nextloom app view app_a1b2c3 --docs
 nextloom app view app_a1b2c3 --full
@@ -175,7 +176,7 @@ nextloom resume import ./resume.pdf
 | Symptom | What to do |
 |---------|-----------|
 | `command not found: nextloom` | `curl -fsSL https://nextloom.ai/install.sh \| bash` |
-| Application created but company/title empty | Added with `--url` alone. Re-add with `--detail` or `--file`. |
+| Application created but company/title empty | Added with `--url` alone, so no import ran. Fetch the text and re-add with `--file` + `--url`; this creates a *second* record, so offer to delete the empty one. |
 | `Application not found` | Run `nextloom app list --json` for current ids |
 | No master resume | `nextloom resume import <file>`, or point the user at https://nextloom.ai/resume |
 | Delete refused | Add `--force` — but confirm with the user first |
