@@ -25,11 +25,19 @@ Exit code 4 on the first means the user must run `nextloom auth login` — stop 
 
 **You supply the text. Nothing else will.** Company, title, required skills, and keywords are extracted by AI from the description text you pass in. Nextloom never fetches a job posting — no code path anywhere reads `--url`. Getting the page and turning it into readable text is your job, not the CLI's.
 
-`app add` takes no positional argument — always use a flag.
+**One job, one `app add` call.** Get the text *before* you touch the CLI, then create and import in that single command. Never add a record and fix it afterwards — there is no follow-up command that can (`app update` takes `--status` only, and nothing re-parses a posting into an existing record), and a second `app add` does not replace the first, it creates another row. If you are not holding the description text, you are not ready to run the command.
 
-**The standard flow when the user gives you a link:**
+`app add` takes no positional argument — always use a flag. Which flags you use depends on what the user gave you:
 
-1. Fetch the page yourself and extract the real posting text. Many boards render the description via JavaScript (Greenhouse, Lever, Workday embeds), so the raw HTML is often an empty shell — use the board's JSON/API endpoint when there is one.
+| The user gives you | You do | Command |
+|---|---|---|
+| A job link | Scrape the page, extract the description text, pass both | `app add --file <path> --url <link>` |
+| A file, email, PDF, or pasted description | Pass the text; there is usually no link, and that is fine | `app add --file <path>` |
+| A link you cannot scrape | Ask them to paste the description. Do not add. | — |
+
+### Case 1 — the user has a link
+
+1. Fetch the page and extract the real posting text. Many boards render the description via JavaScript (Greenhouse, Lever, Workday embeds), so the raw HTML is often an empty shell — use the board's JSON/API endpoint when there is one.
 2. Write the text to a file.
 3. Add it, passing the original link too:
 
@@ -37,23 +45,28 @@ Exit code 4 on the first means the user must run `nextloom auth login` — stop 
 nextloom app add --file /tmp/jd.txt --url https://acme.example/jobs/42 --json
 ```
 
-Prefer `--file` over `--detail` for anything posting-sized: a real description runs to several KB with quotes, `$`, and newlines, all of which the shell will mangle or truncate as a command-line argument. Stdin works the same way:
+Pass `--url` here even though the text is what gets parsed. It is the only way the posting URL is ever stored, and no command can add it afterwards (`app update` takes `--status` only).
+
+### Case 2 — the user has the description, no link
+
+A JD often arrives with no URL at all — a file, an email, a PDF, text pasted into the conversation. Add it with the text alone; `--url` is optional and inventing one is worse than omitting it.
 
 ```bash
-pbpaste | nextloom app add --file - --url https://acme.example/jobs/42 --json
+nextloom app add --file ~/Downloads/jd.txt --json
+pbpaste | nextloom app add --file - --json
 ```
 
-`--detail` is for short text the user pasted straight into the conversation:
+Prefer `--file` over `--detail` for anything posting-sized: a real description runs to several KB with quotes, `$`, and newlines, all of which the shell will mangle or truncate as a command-line argument. `--detail` is for a short blurb pasted straight into the conversation:
 
 ```bash
 nextloom app add --detail "We are hiring a Senior Engineer at Acme Corp..." --json
 ```
 
-**Never add with `--url` alone.** It is not "less accurate" — it does nothing. The create handler skips the import pipeline outright when there is no text (`if (!jobDetailText) return`), so no AI ever runs and the record stays empty forever: no company, no title, no skills, no match score. If you cannot get the text, say so and ask the user to paste the description rather than creating a record you know will be blank.
+### Case 3 — a link you cannot get the text out of
 
-Always pass `--url` alongside the text. It is the only way the posting link is ever stored, and there is no command to add it afterwards (`app update` takes `--status` only). When both are given, the text wins for extraction and the URL is kept on the record.
+**Never fall back to `--url` alone.** It is not "less accurate" — it does nothing. The create handler skips the import pipeline outright when there is no text (`if (!jobDetailText) return`), so no AI ever runs and the record stays empty forever: no company, no title, no skills, no match score. Tell the user the page could not be read and ask them to paste the description. Adding a record you know will be blank is worse than not adding one.
 
-**`app add` never deduplicates.** Every call creates a new record; the server does not check whether that URL or company already exists. There is also no command to re-parse a posting into an existing record. So a thin record cannot be repaired — it can only be replaced, which means a second extraction and a leftover row to delete.
+**`app add` never deduplicates.** The server does not check whether that URL or company already exists, so a retry is not a retry — it is a second application. This is why the text has to be in hand before the call: an add that turns out wrong cannot be undone or amended, only deleted.
 
 Backdating an application the user already submitted:
 
@@ -136,7 +149,7 @@ nextloom generate status job_x1y2z3 --json
 | Exit code 4 | Run `nextloom auth login` |
 | Exit code 3 | Generation failed or timed out. Check `nextloom generate status <job-id>`. Offer to retry. |
 | Exit code 2 on `app add` | Usually a positional argument. Use `--detail`, `--file`, or `--url`. |
-| Application created with no company or title | Added by `--url` alone, so no import ever ran. Fetch the posting text, then re-add with `--file` **and** `--url` together. Tell the user this costs a second extraction and leaves the empty record behind — offer to `app delete` it, and only with their go-ahead. Never re-add silently. |
+| An **existing** record has no company or title | It was added elsewhere with a URL and no text, so no import ever ran. You cannot repair it — there is no re-import command. Fetching the text and adding it creates a *second* record, so say that plainly first, and only proceed if the user wants it; then offer to `app delete` the empty one. Never do this silently. Do not create this situation yourself: see Step 1. |
 | No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
 | Generation keeps retrying | The ATS check is rejecting drafts. Suggest reviewing the master resume. |
 

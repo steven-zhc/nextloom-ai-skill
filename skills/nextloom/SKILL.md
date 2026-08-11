@@ -23,7 +23,7 @@ Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth
 
 ## Five rules that are easy to get wrong
 
-1. **`app add` takes no positional argument, and Nextloom never fetches a URL.** You must supply the posting text — `--file` for anything posting-sized, `--detail` only for short pasted text. A bare `--url` saves the link and runs no import at all: the record stays permanently empty. Pass `--url` *alongside* the text so the link is stored.
+1. **`app add` takes no positional argument, and Nextloom never fetches a URL.** You must supply the posting text — `--file` for anything posting-sized, `--detail` only for short pasted text. A bare `--url` saves the link and runs no import at all: the record stays permanently empty. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
 3. **`generate status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
@@ -176,7 +176,7 @@ nextloom resume import ./resume.pdf
 | Symptom | What to do |
 |---------|-----------|
 | `command not found: nextloom` | `curl -fsSL https://nextloom.ai/install.sh \| bash` |
-| Application created but company/title empty | Added with `--url` alone, so no import ran. Fetch the text and re-add with `--file` + `--url`; this creates a *second* record, so offer to delete the empty one. |
+| An existing application has an empty company/title | Added elsewhere with `--url` and no text, so no import ran. It cannot be repaired — adding the text makes a *second* record. Tell the user before doing it, then offer to delete the empty one. |
 | `Application not found` | Run `nextloom app list --json` for current ids |
 | No master resume | `nextloom resume import <file>`, or point the user at https://nextloom.ai/resume |
 | Delete refused | Add `--force` — but confirm with the user first |
