@@ -77,7 +77,7 @@ describe('commands that must PASS', () => {
     // The guard does not check required flags, so it passed either way — which
     // is the point. Do not put an invalid command in the PASS list.
     'a flag with a value': 'nextloom app list --status Interviewing',
-    'an inline flag value': 'nextloom generate resume app_a1 --format=pdf',
+    'an inline flag value': 'nextloom doc generate resume app_a1 --format=pdf',
     'the dotted --field form': 'nextloom profile edit --field personalInfo.timezone=America/Chicago',
     'a negated boolean flag': 'nextloom app add --file jd.txt --no-wait',
     'the --env global (absent from the reference)': 'nextloom auth whoami --env dev',
@@ -86,7 +86,7 @@ describe('commands that must PASS', () => {
     'a shell redirect': 'nextloom auth whoami --json 2>/dev/null',
     'a pipe into jq': "nextloom app list --json | jq '.[].company_name'",
     'a trailing comment': 'nextloom app view app_a1 --json   # inspect it',
-    'a placeholder argument': 'nextloom generate status <job-id>',
+    'a placeholder argument': 'nextloom doc status <job-id>',
     'the nai alias': 'nai auth whoami --json',
   }
 

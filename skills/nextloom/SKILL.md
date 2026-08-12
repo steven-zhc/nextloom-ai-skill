@@ -25,7 +25,7 @@ Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth
 
 1. **`app add` requires `--file`, and Nextloom never fetches a URL.** You supply the posting text; there is no flag for inline text and no positional argument — a bare path is silently ignored, not rejected. `--url` alone fails with `Missing required flag "--file"` (exit 1) because nothing would ever parse it. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
-3. **`generate status` takes a job id** (`job_x1y2z3`), not an application id.
+3. **`doc status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
 5. **`app delete` needs `--force`** whenever output is `--json` or stdin is not a terminal — which is always true for you.
 
@@ -71,7 +71,7 @@ nextloom resume import ./resume.pdf
 ### Step 3 — Generate Tailored Resume
 
 ```bash
-nextloom generate resume app_a1b2c3 --json
+nextloom doc generate resume app_a1b2c3 --json
 ```
 
 Runs a 5-step pipeline: benchmark → tailor → ATS check → humanize → final check. The CLI waits and reports each step. Expect 30–90 seconds. A resume may loop back to tailoring when the ATS check rejects a draft — a retry in the output is normal, not an error.
@@ -81,7 +81,7 @@ Tell the user the output path when it finishes.
 ### Step 4 — Generate Cover Letter
 
 ```bash
-nextloom generate cover-letter app_a1b2c3 --json
+nextloom doc generate cover-letter app_a1b2c3 --json
 ```
 
 Three steps: match profile → write → humanize.
@@ -95,8 +95,8 @@ nextloom app update app_a1b2c3 --status Applied --json
 ### Follow-Up & Thank-You
 
 ```bash
-nextloom generate follow-up app_a1b2c3 --json
-nextloom generate thank-you app_a1b2c3 --json
+nextloom doc generate follow-up app_a1b2c3 --json
+nextloom doc generate thank-you app_a1b2c3 --json
 ```
 
 ## Command Reference
@@ -132,11 +132,11 @@ nextloom app delete app_a1b2c3 --force --json
 ### Document Generation
 
 ```bash
-nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf
-nextloom generate cover-letter app_a1b2c3 --json
-nextloom generate follow-up app_a1b2c3 --json
-nextloom generate thank-you app_a1b2c3 --json
-nextloom generate status job_x1y2z3 --json
+nextloom doc generate resume app_a1b2c3 --format pdf --output ./resume.pdf
+nextloom doc generate cover-letter app_a1b2c3 --json
+nextloom doc generate follow-up app_a1b2c3 --json
+nextloom doc generate thank-you app_a1b2c3 --json
+nextloom doc status job_x1y2z3 --json
 ```
 
 Files default to the same name the web app uses — `<Your_Name>_Resume_<Company>.<ext>`. Pass `--output` to choose your own.
@@ -168,7 +168,7 @@ nextloom resume import ./resume.pdf
 | 0 | Success | — |
 | 1 | Generic error | Report it to the user |
 | 2 | Usage error — unknown command, missing argument, bad flag | Check `--help`; do not guess another flag |
-| 3 | Generation failed or timed out | The job may still finish server-side. Check `nextloom generate status <job-id>` |
+| 3 | Generation failed or timed out | The job may still finish server-side. Check `nextloom doc status <job-id>` |
 | 4 | Not signed in, or the session could not be refreshed | Tell the user to run `nextloom auth login` |
 
 ## Error Handling

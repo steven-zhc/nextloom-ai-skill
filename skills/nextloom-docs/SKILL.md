@@ -22,11 +22,30 @@ nextloom resume view --json
 
 Exit code 4 → `nextloom auth login`. You need an application id from the second. If the third shows no resume, run `nextloom resume import <file>` first — every generator reads from the master resume.
 
+## Generating vs Downloading
+
+Everything lives under `nextloom doc`, but the two halves cost very different things:
+
+| Command | Cost | Effect |
+|---------|------|--------|
+| `doc generate <type> <app-id>` | AI quota, 30–90s | **Replaces** any existing document of that type |
+| `doc get <type> <app-id>` | one request | Downloads what is already stored, unchanged |
+| `doc list <app-id>` | four HEADs | Shows which documents exist |
+
+**Check before you generate.** If the user wants a PDF of a resume they already have, that is `doc get`, not `doc generate` — the server renders every format from the stored document, so regenerating to change format throws away the existing draft and spends quota for no reason.
+
+```bash
+nextloom doc list app_a1b2c3
+nextloom doc get resume app_a1b2c3 --format pdf
+```
+
+Regenerate only when the user wants *different content* — a fresh take, or after their master resume changed. Say plainly that it replaces the current draft before you do.
+
 ## How Generation Behaves
 
 All four generators share the same contract:
 
-- One positional argument: the **application id**.
+- Two positional arguments: the **document type**, then the **application id**.
 - `--output <path>` chooses the destination, `--format <fmt>` the format.
 - **The CLI waits, streams each step, and downloads the file before returning.** Do not poll, do not background it.
 - Without `--output`, the file is saved under the same name the web app uses, so the two never diverge.
@@ -36,8 +55,8 @@ All four generators share the same contract:
 ### Tailored Resume
 
 ```bash
-nextloom generate resume app_a1b2c3 --json
-nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf
+nextloom doc generate resume app_a1b2c3 --json
+nextloom doc generate resume app_a1b2c3 --format pdf --output ./resume.pdf
 ```
 
 Rewrites the master resume against the posting: relevant experience first, skills reordered, keywords aligned for ATS.
@@ -51,8 +70,8 @@ Default name: `<Your_Name>_Resume_<Company>.<ext>`.
 ### Cover Letter
 
 ```bash
-nextloom generate cover-letter app_a1b2c3 --json
-nextloom generate cover-letter app_a1b2c3 --output ./cl.pdf --format pdf
+nextloom doc generate cover-letter app_a1b2c3 --json
+nextloom doc generate cover-letter app_a1b2c3 --output ./cl.pdf --format pdf
 ```
 
 Three steps — match profile → write → humanize. Default name: `<Your_Name>_Cover_Letter_<Company>.<ext>`.
@@ -62,7 +81,7 @@ Three steps — match profile → write → humanize. Default name: `<Your_Name>
 ### Follow-Up
 
 ```bash
-nextloom generate follow-up app_a1b2c3 --json
+nextloom doc generate follow-up app_a1b2c3 --json
 ```
 
 Single processing step. Renders as JSON and saves as `follow-up-<app-id>.json` — the web app has no download name for these, so the CLI does not invent one.
@@ -72,7 +91,7 @@ Single processing step. Renders as JSON and saves as `follow-up-<app-id>.json` �
 ### Thank-You Note
 
 ```bash
-nextloom generate thank-you app_a1b2c3 --json
+nextloom doc generate thank-you app_a1b2c3 --json
 ```
 
 Single step. Saves as `thank-you-<app-id>.json`.
@@ -82,7 +101,7 @@ Single step. Saves as `thank-you-<app-id>.json`.
 ## Checking an Async Job
 
 ```bash
-nextloom generate status job_x1y2z3 --json
+nextloom doc status job_x1y2z3 --json
 ```
 
 **This takes a job id, not an application id.** The job id appears in the generation command's output (`Generating resume for app_a1b2c3 (job job_x1y2z3)`) and in the `job_id` field of `--json` output.
@@ -108,15 +127,15 @@ Show the matches with company, status, and applied date, and ask which one. Neve
 - **Review before sending.** These are strong drafts, not finished correspondence.
 - **Keep the master resume current** — `nextloom resume view --json`.
 - **Regenerating replaces the existing document and uses quota.** The CLI warns; pass that warning on before you re-run.
-- **Check what already exists** with `nextloom app view <id> --docs` before generating.
+- **Check what already exists** with `nextloom doc list <id>` before generating — then `doc get` it instead of regenerating.
 
 ## Error Handling
 
 | Symptom | What to do |
 |---------|-----------|
 | Exit code 4 | Run `nextloom auth login` |
-| Exit code 3 | Failed or timed out. The job may still finish — check `nextloom generate status <job-id>`. |
-| Exit code 2 | Wrong argument shape. Generators take exactly one application id. |
+| Exit code 3 | Failed or timed out. The job may still finish — check `nextloom doc status <job-id>`. |
+| Exit code 2 | Wrong argument shape. `doc generate` and `doc get` take the document type, then the application id. |
 | No application id | `nextloom app list --json`, or offer to add one |
 | No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
 | Repeated retries in the pipeline | The ATS check keeps rejecting. Suggest reviewing the master resume. |

@@ -40,14 +40,14 @@ nextloom auth --help
 nextloom profile --help
 nextloom app --help
 nextloom resume --help
-nextloom generate --help
+nextloom doc --help
 ```
 
 ## Step 3 — A Specific Subcommand
 
 ```bash
 nextloom app add --help
-nextloom generate resume --help
+nextloom doc generate resume --help
 nextloom profile edit --help
 ```
 
@@ -84,7 +84,7 @@ The human-readable page is https://nextloom.ai/cli-reference.
 | 0 | Success |
 | 1 | Generic or unexpected error |
 | 2 | Usage error — unknown command, missing argument, bad flag |
-| 3 | A generation job failed or timed out. It may still finish server-side — check `nextloom generate status <job-id>` |
+| 3 | A generation job failed or timed out. It may still finish server-side — check `nextloom doc status <job-id>` |
 | 4 | Not signed in, or the stored session could not be refreshed |
 
 ## Environment Variables

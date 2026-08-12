@@ -134,11 +134,13 @@ Verified against CLI **v0.24.0**. Every command supports `--json` for structured
 | `nextloom resume view` | View your master resume |
 | `nextloom resume export --format <fmt>` | Export the resume as md or json |
 | `nextloom resume import <file>` | Import a resume file |
-| `nextloom generate resume <app-id>` | Generate a tailored resume |
-| `nextloom generate cover-letter <app-id>` | Generate a tailored cover letter |
-| `nextloom generate follow-up <app-id>` | Generate a follow-up email |
-| `nextloom generate thank-you <app-id>` | Generate a thank-you note |
-| `nextloom generate status <job-id>` | Check an async generation job |
+| `nextloom doc generate resume <app-id>` | Generate a tailored resume |
+| `nextloom doc generate cover-letter <app-id>` | Generate a tailored cover letter |
+| `nextloom doc generate follow-up <app-id>` | Generate a follow-up email |
+| `nextloom doc generate thank-you <app-id>` | Generate a thank-you note |
+| `nextloom doc status <job-id>` | Check an async generation job |
+| `nextloom doc list <app-id>` | Show which documents exist |
+| `nextloom doc get <type> <app-id>` | Download an existing document — no regeneration, no quota |
 | `nextloom completion shell <shell>` | Print a shell completion script |
 
 The full machine-readable reference lives at [nextloom.ai/cli-reference.json](https://nextloom.ai/cli-reference.json), generated from the CLI's own command tree.
@@ -146,7 +148,7 @@ The full machine-readable reference lives at [nextloom.ai/cli-reference.json](ht
 ### Three things that trip agents up
 
 1. **`app add` requires `--file`, and a bare path is ignored rather than rejected.** Nextloom never fetches a job page, so `--url` alone fails — scrape the posting yourself and pass the text, keeping `--url` for the link.
-2. **`generate status` takes a job id**, not an application id.
+2. **`doc status` takes a job id**, not an application id.
 3. **`app delete` requires `--force`** under `--json` or any non-interactive shell.
 
 ## Staying in Sync

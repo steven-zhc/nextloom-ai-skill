@@ -407,16 +407,21 @@
       ]
     },
     {
-      "id": "generate",
-      "title": "Generate",
-      "description": "Generate documents for an application. These run asynchronously — the CLI polls until the document is ready, then downloads it. Resumes and cover letters run as a pipeline, so the CLI reports each step as it completes. A resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge. Pass --output to name it yourself.",
+      "id": "documents",
+      "title": "Documents",
+      "description": "Generate, list, and download the documents for an application. `doc generate` runs an AI pipeline — the CLI polls until it is ready, then downloads it — and replaces any existing document of that type, spending quota. `doc get` only reads: the server renders each format from the stored document, so exporting a resume you already have as PDF costs one request and no quota. Resumes and cover letters run as pipelines and report each step; a resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge.",
       "commands": [
         {
-          "id": "generate-resume",
-          "name": "nextloom generate resume",
-          "summary": "Generate a tailored resume.",
-          "description": "Generates a resume tailored to the application, then downloads it.",
+          "id": "doc-generate",
+          "name": "nextloom doc generate",
+          "summary": "Generate a document for an application.",
+          "description": "Runs the AI pipeline for a document type, waits for it, and downloads the result. This replaces any existing document of that type and consumes quota — to fetch one you already have, use `doc get`. Resumes run five steps (benchmark, tailor, ATS check, humanize, final check) and cover letters three; follow-ups and thank-you notes are single-shot. The CLI streams progress and downloads the file before returning, so do not poll.",
           "args": [
+            {
+              "name": "type",
+              "required": true,
+              "description": "Document type: resume, cover-letter, follow-up, or thank-you."
+            },
             {
               "name": "app-id",
               "required": true,
@@ -425,132 +430,99 @@
           ],
           "flags": [
             {
-              "name": "--output",
-              "value": "<path>",
-              "required": false,
-              "description": "Where to save the file. Defaults to the name the web app would give it."
-            },
-            {
               "name": "--format",
               "value": "<fmt>",
               "required": false,
-              "description": "Output format: md, json, docx, pdf."
-            }
-          ],
-          "examples": [
-            "nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf\n\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 4/5  Humanizing                52s\n    ✓ 5/5  Final check               58s\n  Saved resume to ./resume.pdf",
-            "nextloom generate resume app_a1b2c3\n\n  # Tailoring repeats when the ATS check rejects the draft, which is why a\n  # generation can take well over a minute.\n  Note: a resume already exists for this application. Regenerating replaces it and uses quota.\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 2/5  Tailoring (retry 2)       29s\n    ✓ 3/5  ATS check                 35s\n    ✓ 4/5  Humanizing             1m 22s\n    ✓ 5/5  Final check            1m 28s\n  Saved resume to ./Ada_Lovelace_Resume_Acme_Corp.md",
-            "nextloom generate resume app_a1b2c3 --json\n\n  {\"ok\":true,\"job_id\":\"job_x1y2z3\",\"output\":\"/home/ada/Ada_Lovelace_Resume_Acme_Corp.md\"}"
-          ]
-        },
-        {
-          "id": "generate-cover-letter",
-          "name": "nextloom generate cover-letter",
-          "summary": "Generate a cover letter.",
-          "description": "Generates a cover letter for the application, then downloads it.",
-          "args": [
-            {
-              "name": "app-id",
-              "required": true,
-              "description": "Application id."
-            }
-          ],
-          "flags": [
+              "description": "Output format. Resume and cover letter: md, json, docx, pdf. Follow-up and thank-you: json."
+            },
             {
               "name": "--output",
               "value": "<path>",
               "required": false,
               "description": "Where to save the file. Defaults to the name the web app would give it."
-            },
-            {
-              "name": "--format",
-              "value": "<fmt>",
-              "required": false,
-              "description": "Output format: md, json, docx, pdf."
             }
           ],
           "examples": [
-            "nextloom generate cover-letter app_a1b2c3 --format pdf\n\n  Generating cover-letter for app_a1b2c3 (job job_y1z2x3)...\n    ✓ Queued                          1s\n    ✓ 1/3  Matching your profile      6s\n    ✓ 2/3  Writing the letter        14s\n    ✓ 3/3  Humanizing                25s\n  Saved cover-letter to ./Ada_Lovelace_Cover_Letter_Acme_Corp.pdf",
-            "nextloom generate cover-letter app_a1b2c3 --output ./cl.pdf --json\n\n  {\"ok\":true,\"job_id\":\"job_y1z2x3\",\"output\":\"cl.pdf\"}"
+            "nextloom doc generate resume app_a1b2c3 --format pdf --output ./resume.pdf\n\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 4/5  Humanizing                52s\n    ✓ 5/5  Final check               58s\n  Saved resume to ./resume.pdf",
+            "nextloom doc generate resume app_a1b2c3\n\n  # Tailoring repeats when the ATS check rejects the draft, which is why a\n  # generation can take well over a minute.\n  Note: a resume already exists for this application. Regenerating replaces it and uses quota.\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 2/5  Tailoring (retry 2)       29s\n    ✓ 3/5  ATS check                 35s\n    ✓ 4/5  Humanizing             1m 22s\n    ✓ 5/5  Final check            1m 28s\n  Saved resume to ./Ada_Lovelace_Resume_Acme_Corp.md",
+            "nextloom doc generate cover-letter app_a1b2c3 --format pdf\n\n  Generating cover-letter for app_a1b2c3 (job job_y1z2x3)...\n    ✓ Queued                          1s\n    ✓ 1/3  Matching your profile      6s\n    ✓ 2/3  Writing the letter        14s\n    ✓ 3/3  Humanizing                25s\n  Saved cover-letter to ./Ada_Lovelace_Cover_Letter_Acme_Corp.pdf",
+            "nextloom doc generate follow-up app_a1b2c3\n\n  # Follow-ups render only as JSON, and the web app has no download name for\n  # them, so this keeps the <doc>-<app-id> form rather than inventing one.\n  Generating follow-up for app_a1b2c3 (job job_z1x2y3)...\n    ✓ Processing                      6s\n  Saved follow-up to ./follow-up-app_a1b2c3.json",
+            "nextloom doc generate resume app_a1b2c3 --json\n\n  {\"ok\":true,\"job_id\":\"job_x1y2z3\",\"output\":\"/home/ada/Ada_Lovelace_Resume_Acme_Corp.md\"}"
           ]
         },
         {
-          "id": "generate-follow-up",
-          "name": "nextloom generate follow-up",
-          "summary": "Generate a follow-up message.",
-          "description": "Generates a follow-up message for the application, then downloads it.",
-          "args": [
-            {
-              "name": "app-id",
-              "required": true,
-              "description": "Application id."
-            }
-          ],
-          "flags": [
-            {
-              "name": "--output",
-              "value": "<path>",
-              "required": false,
-              "description": "Where to save the file. Defaults to the name the web app would give it."
-            },
-            {
-              "name": "--format",
-              "value": "<fmt>",
-              "required": false,
-              "description": "Output format: json."
-            }
-          ],
-          "examples": [
-            "nextloom generate follow-up app_a1b2c3\n\n  # Follow-ups render only as JSON, and the web app has no download name for\n  # them, so this keeps the <doc>-<app-id> form rather than inventing one.\n  Generating follow-up for app_a1b2c3 (job job_z1x2y3)...\n    ✓ Processing                      6s\n  Saved follow-up to ./follow-up-app_a1b2c3.json"
-          ]
-        },
-        {
-          "id": "generate-thank-you",
-          "name": "nextloom generate thank-you",
-          "summary": "Generate a thank-you note.",
-          "description": "Generates a thank-you note for the application, then downloads it.",
-          "args": [
-            {
-              "name": "app-id",
-              "required": true,
-              "description": "Application id."
-            }
-          ],
-          "flags": [
-            {
-              "name": "--output",
-              "value": "<path>",
-              "required": false,
-              "description": "Where to save the file. Defaults to the name the web app would give it."
-            },
-            {
-              "name": "--format",
-              "value": "<fmt>",
-              "required": false,
-              "description": "Output format: json."
-            }
-          ],
-          "examples": [
-            "nextloom generate thank-you app_a1b2c3\n\n  Generating thank-you for app_a1b2c3 (job job_a1b2c3)...\n    ✓ Processing                      5s\n  Saved thank-you to ./thank-you-app_a1b2c3.json"
-          ]
-        },
-        {
-          "id": "generate-status",
-          "name": "nextloom generate status",
-          "summary": "Check an async generation job.",
-          "description": "Prints the status of a generation job. Resume and cover-letter jobs run as a pipeline and also report the step they are on; follow-up and thank-you are single-shot and report status only.",
+          "id": "doc-status",
+          "name": "nextloom doc status",
+          "summary": "Check a document generation job.",
+          "description": "Prints the status of a generation job. Resume and cover-letter jobs run as a pipeline and also report the step they are on; follow-up and thank-you are single-shot and report status only. Takes the job id printed when generation started — not an application id. Use it to recover after an interrupted run, not as a polling loop: `doc generate` already waits.",
           "args": [
             {
               "name": "job-id",
               "required": true,
-              "description": "Generation job id."
+              "description": "Generation job id, as printed when generation started."
             }
           ],
           "flags": [],
           "examples": [
-            "nextloom generate status job_x1y2z3\n\n  status:  Completed\n  step:    5/5 Final check\n  entity:  app_a1b2c3",
-            "nextloom generate status job_z1x2y3\n\n  # A follow-up has no pipeline, so there is no step to report.\n  status:  Completed\n  entity:  app_a1b2c3",
-            "nextloom generate status job_x1y2z3 --json\n\n  {\"status\":\"completed\",\"aggregate_id\":\"app_a1b2c3\",\"workflow\":{\"current_step\":\"final_check\",\"total_steps\":5}}"
+            "nextloom doc status job_x1y2z3\n\n  status:  Processing\n  step:    3/5 ATS check\n  entity:  app_a1b2c3",
+            "nextloom doc status job_x1y2z3 --json\n\n  {\"job_id\":\"job_x1y2z3\",\"status\":\"completed\",\"aggregate_id\":\"app_a1b2c3\"}"
+          ]
+        },
+        {
+          "id": "doc-list",
+          "name": "nextloom doc list",
+          "summary": "Show which documents exist for an application.",
+          "description": "Lists the four document types and whether each has been generated, with the formats each can be downloaded as. Same information as `app view --docs`.",
+          "args": [
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [],
+          "examples": [
+            "nextloom doc list app_a1b2c3\n\n  ✓ resume          md, json, docx, pdf\n  ✓ cover-letter    md, json, docx, pdf\n  — follow-up\n  — thank-you",
+            "nextloom doc list app_d4e5f6\n\n  No documents generated yet for this application.\n  Create one with: nextloom doc generate resume app_d4e5f6"
+          ]
+        },
+        {
+          "id": "doc-get",
+          "name": "nextloom doc get",
+          "summary": "Download a generated document.",
+          "description": "Downloads a document that has already been generated, in any format that type supports. This does not regenerate: it costs no AI quota and leaves the stored document untouched. Fails if the document does not exist yet — generate it first. Resumes and cover letters support md, json, docx, and pdf; follow-ups and thank-you notes are json only.",
+          "args": [
+            {
+              "name": "type",
+              "required": true,
+              "description": "Document type: resume, cover-letter, follow-up, or thank-you."
+            },
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--format",
+              "value": "<fmt>",
+              "required": false,
+              "description": "Output format. Resume and cover letter: md, json, docx, pdf. Follow-up and thank-you: json. Defaults to the type’s primary format."
+            },
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Defaults to the name the web app would give it."
+            }
+          ],
+          "examples": [
+            "nextloom doc get resume app_a1b2c3 --format pdf\n\n  # no regeneration, no quota — the server renders the stored document\n  Saved resume to ./Ada_Lovelace_Resume_Acme_Corp.pdf",
+            "nextloom doc get cover-letter app_a1b2c3 --output ./cl.md\n\n  Saved cover-letter to ./cl.md",
+            "nextloom doc get resume app_a1b2c3 --format json --json\n\n  {\"ok\":true,\"type\":\"resume\",\"format\":\"json\",\"output\":\"/Users/you/Ada_Lovelace_Resume_Acme_Corp.json\"}",
+            "nextloom doc get resume app_d4e5f6\n\n  nextloom: no resume has been generated for app_d4e5f6 yet. Create one with: nextloom doc generate resume app_d4e5f6",
+            "nextloom doc get follow-up app_a1b2c3 --format pdf\n\n  nextloom: unknown format \"pdf\" for follow-up. Supported: json"
           ]
         }
       ]

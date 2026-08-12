@@ -109,7 +109,7 @@ nextloom app list --status Interviewing --json
 nextloom app view app_g7h8i9 --full
 ```
 
-Read the requirements and description back to the user, then offer `nextloom generate thank-you` afterwards.
+Read the requirements and description back to the user, then offer `nextloom doc generate thank-you` afterwards.
 
 ### Pipeline Overview
 
@@ -132,5 +132,5 @@ New 3 · Applied 12 · Screening 2 · Interviewing 4 · Offered 1 · Declined 5
 ## What This Skill Does NOT Do
 
 - Does NOT add applications — use `nextloom-apply` or `nextloom app add`
-- Does NOT generate documents — use `nextloom-docs` or `nextloom generate`
+- Does NOT generate documents — use `nextloom-docs` or `nextloom doc generate`
 - Does NOT modify the profile — use `nextloom-profile`

@@ -83,7 +83,7 @@ Save the returned `id`, then summarize for the user:
 ## Step 2 — Generate Tailored Resume
 
 ```bash
-nextloom generate resume app_a1b2c3 --json
+nextloom doc generate resume app_a1b2c3 --json
 ```
 
 Five steps: benchmark → tailor → ATS check → humanize → final check. **The CLI waits and streams progress — do not poll.** Typically 30–90 seconds.
@@ -93,7 +93,7 @@ A retry in the output is normal. When the ATS check rejects a draft the pipeline
 Choose the format and destination:
 
 ```bash
-nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf
+nextloom doc generate resume app_a1b2c3 --format pdf --output ./resume.pdf
 ```
 
 Without `--output`, the file lands under the same name the web app uses: `<Your_Name>_Resume_<Company>.<ext>`.
@@ -101,7 +101,7 @@ Without `--output`, the file lands under the same name the web app uses: `<Your_
 ## Step 3 — Generate Cover Letter
 
 ```bash
-nextloom generate cover-letter app_a1b2c3 --json
+nextloom doc generate cover-letter app_a1b2c3 --json
 ```
 
 Three steps: match profile → write → humanize.
@@ -117,8 +117,8 @@ nextloom app update app_a1b2c3 --status Applied --json
 ## Optional Documents
 
 ```bash
-nextloom generate follow-up app_a1b2c3 --json
-nextloom generate thank-you app_a1b2c3 --json
+nextloom doc generate follow-up app_a1b2c3 --json
+nextloom doc generate thank-you app_a1b2c3 --json
 ```
 
 Follow-ups and thank-you notes render as JSON and save as `follow-up-<app-id>.json` / `thank-you-<app-id>.json`.
@@ -128,7 +128,7 @@ Follow-ups and thank-you notes render as JSON and save as `follow-up-<app-id>.js
 If a generation exits 3, or you used `--no-wait`, the job may still be running server-side. Check it with the **job id** from the command's output — not the application id:
 
 ```bash
-nextloom generate status job_x1y2z3 --json
+nextloom doc status job_x1y2z3 --json
 ```
 
 ## Pro Tips
@@ -143,7 +143,7 @@ nextloom generate status job_x1y2z3 --json
 | Symptom | What to do |
 |---------|-----------|
 | Exit code 4 | Run `nextloom auth login` |
-| Exit code 3 | Generation failed or timed out. Check `nextloom generate status <job-id>`. Offer to retry. |
+| Exit code 3 | Generation failed or timed out. Check `nextloom doc status <job-id>`. Offer to retry. |
 | `Missing required flag "--file"` (exit 1) | You passed `--url` alone, a bare path, or nothing. The posting text is mandatory — scrape or ask for it, write it to a file, and re-run with `--file`. Note this is exit **1**, not the usual usage code: the parser rejects it before the command runs. |
 | Exit code 2 on `app add` | The command ran and refused its input: an unreadable `--file` path, a file with no usable text, or a bad `--applied-date`. Read the message — it names the problem. |
 | An **existing** record has no company or title | It was added elsewhere with a URL and no text, so no import ever ran. You cannot repair it — there is no re-import command. Fetching the text and adding it creates a *second* record, so say that plainly first, and only proceed if the user wants it; then offer to `app delete` the empty one. Never do this silently. Do not create this situation yourself: see Step 1. |
