@@ -168,7 +168,7 @@ nextloom resume import ./resume.pdf
 | 0 | Success | — |
 | 1 | Generic error | Report it to the user |
 | 2 | Usage error — unknown command, missing argument, bad flag | Check `--help`; do not guess another flag |
-| 3 | Generation failed or timed out | The job may still finish server-side. Check `nextloom doc status <job-id>` |
+| 3 | Generation failed or timed out | It may still finish server-side. Check `nextloom doc list <app-id>`; use `doc status <job-id>` for the reason |
 | 4 | Not signed in, or the session could not be refreshed | Tell the user to run `nextloom auth login` |
 
 ## Error Handling

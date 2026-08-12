@@ -98,17 +98,27 @@ Single step. Saves as `thank-you-<app-id>.json`.
 
 **When to use**: within 24 hours of an interview.
 
-## Checking an Async Job
+## Recovering an Interrupted Generation
+
+**Ask whether the document exists, not what the job did.** A finished pipeline's only durable output is the document, so this answers the real question and needs no job id — it works tomorrow, from any machine:
+
+```bash
+nextloom doc list app_a1b2c3
+```
+
+If the document is there, the generation finished regardless of what happened to your terminal. Download it with `doc get`; do not regenerate.
+
+### When you still have the job id
 
 ```bash
 nextloom doc status job_x1y2z3 --json
 ```
 
-**This takes a job id, not an application id.** The job id appears in the generation command's output (`Generating resume for app_a1b2c3 (job job_x1y2z3)`) and in the `job_id` field of `--json` output.
+**This takes a job id, not an application id**, and there is no way to look one up from an application — the id appears only in the generation command's output (`Generating resume for app_a1b2c3 (job job_x1y2z3)`) and in the `job_id` field under `--json`. Once that output is gone, so is the id.
 
-Use it only to recover — after an exit code 3, or a `--no-wait` import. Not as a polling loop.
+Use it for the one thing `doc list` cannot tell you: *why* a document is missing. An absent document looks the same whether the pipeline failed at the ATS check or was never started; only the job carries the step and the error.
 
-The response reports `status`, the current pipeline step, and the `aggregate_id` of the application. Follow-ups and thank-you notes have no pipeline, so they report no step.
+The response reports `status`, the current pipeline step, and `aggregate_id` — which is the **generated document's** id, not the application's. Follow-ups and thank-you notes have no pipeline, so they report no step.
 
 ## Choosing the Right Application
 
@@ -134,7 +144,7 @@ Show the matches with company, status, and applied date, and ask which one. Neve
 | Symptom | What to do |
 |---------|-----------|
 | Exit code 4 | Run `nextloom auth login` |
-| Exit code 3 | Failed or timed out. The job may still finish — check `nextloom doc status <job-id>`. |
+| Exit code 3 | Failed or timed out. The job may still finish — check `nextloom doc list <app-id>`; `doc status <job-id>` gives the reason if it never lands. |
 | Exit code 2 | Wrong argument shape. `doc generate` and `doc get` take the document type, then the application id. |
 | No application id | `nextloom app list --json`, or offer to add one |
 | No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
