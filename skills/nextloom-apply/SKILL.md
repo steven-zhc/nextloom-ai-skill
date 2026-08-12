@@ -106,7 +106,54 @@ nextloom doc generate cover-letter app_a1b2c3 --json
 
 Three steps: match profile → write → humanize.
 
-## Step 4 — Mark as Applied
+## Step 4 — Fill the Application Form
+
+When you are filling a form on the company's site, **read the profile before asking the user anything.** Most of what an ATS asks is already stored — asking for it wastes their time and makes the tool look like it does not know them.
+
+```bash
+nextloom profile view --all --json
+```
+
+One call, then answer from it:
+
+| The form asks | Profile path |
+|---|---|
+| First / last name | `personalInfo.firstName` · `personalInfo.lastName` |
+| Email | `personalInfo.email` |
+| Phone | `personalInfo.phoneCountryCode` + `personalInfo.phoneNumber` |
+| City / state / country / postal code | `personalInfo.address.*` |
+| LinkedIn | `links.linkedinUrl` |
+| GitHub | `links.githubUrl` |
+| Website / portfolio | `links.websiteUrl` |
+| Authorized to work in the US? | `workPreferences.authorizedToWorkInUS` |
+| Need visa sponsorship, now or later? | `workPreferences.requireVisaSponsorship` |
+| Willing to relocate? | `workPreferences.openToRelocate` |
+| Earliest start date | `workPreferences.earliestStartDate` |
+| Desired salary | `workPreferences.salaryExpectationMin` + `workPreferences.salaryCurrency` |
+| Remote / hybrid / onsite | `workPreferences.workMode` |
+
+Run `nextloom profile view --path` for the full list; the paths above are the ones ATS forms actually ask for.
+
+### What the profile cannot answer — ask
+
+- **Have you worked here before?**
+- **How did you hear about this role?**
+- **Referral name**, and anything else company-specific.
+- **Work eligibility in any country other than the US.** `authorizedToWorkInUS` says nothing about Canada, the UK, or the EU. Never infer one from the other — it is a legal declaration the user signs, and a wrong guess is worse than a question.
+
+Ask for these in one batch, not one at a time.
+
+### Voluntary self-identification
+
+Race, gender, veteran, and disability answers live behind `nextloom profile view --eeo` (`eeo.race`, `eeo.gender`, `eeo.veteranStatus`, `eeo.disabilityStatus`, and others). Having them does not mean filling them in.
+
+**Ask before you touch that section, every time.** These are protected characteristics, the questions are voluntary by law, and declining to answer is a valid answer. If the user does not want to decide, leave the whole section blank and say so.
+
+### Fill, then stop
+
+Fill every field you can justify, then hand back for review. **Do not submit.** Say what you filled, what you left blank, and what you guessed at — an application is sent once, and the user is the one whose name is on it.
+
+## Step 5 — Mark as Applied
 
 After the user confirms they submitted:
 

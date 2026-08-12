@@ -21,13 +21,14 @@ These instructions target CLI **v0.24.0**. If `--version` reports something else
 
 Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth login` and stop — no other command will work.
 
-## Five rules that are easy to get wrong
+## Six rules that are easy to get wrong
 
 1. **`app add` requires `--file`, and Nextloom never fetches a URL.** You supply the posting text; there is no flag for inline text and no positional argument — a bare path is silently ignored, not rejected. `--url` alone fails with `Missing required flag "--file"` (exit 1) because nothing would ever parse it. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
 3. **`doc status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
 5. **`app delete` needs `--force`** whenever output is `--json` or stdin is not a terminal — which is always true for you.
+6. **Read the profile before asking the user for anything.** `nextloom profile view --all --json` already holds name, email, phone, address, links, work authorization, sponsorship, relocation, start date, and salary — the bulk of any application form. Asking for what the tool already knows is the fastest way to look like it does not know them. See `nextloom-apply` for the field-by-field mapping.
 
 ## Core Workflow
 

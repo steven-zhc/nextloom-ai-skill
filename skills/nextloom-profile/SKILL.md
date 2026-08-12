@@ -117,6 +117,16 @@ nextloom resume import ./resume.pdf
 
 `resume export` writes to stdout unless `--output` is given. Format defaults to `md`.
 
+## Filling an Application Form
+
+`profile view --all --json` is the answer sheet for an ATS form — name, email, phone, address, links, work authorization, sponsorship, relocation, start date, salary. Read it **before** asking the user for any of it.
+
+It does not cover: whether they have worked at that company before, how they heard about the role, or work eligibility in any country other than the US — `workPreferences.authorizedToWorkInUS` says nothing about Canada or the EU, and inferring one from the other is a legal declaration you are not entitled to make.
+
+Self-identification data (`--eeo`) is stored, but storing it is not permission to submit it. Ask first, every time; leaving it blank is always a valid answer.
+
+See `nextloom-apply` for the full field mapping.
+
 `resume import` uploads and parses the file, waiting for processing to finish. Add `--no-wait` to queue it and return immediately.
 
 If the wait times out (exit 3), the parse may still land server-side. Check with `nextloom resume view` rather than re-importing — a second import re-parses the same file and overwrites the master resume.
