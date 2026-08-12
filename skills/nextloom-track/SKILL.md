@@ -10,7 +10,7 @@ required_tools: terminal
 
 View, filter, and manage job applications through the `nextloom` CLI.
 
-Verified against CLI **v0.23.2**.
+Verified against CLI **v0.24.0**.
 
 ## Prerequisites
 

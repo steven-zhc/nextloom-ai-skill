@@ -10,7 +10,7 @@ required_tools: terminal
 
 End-to-end: from a job posting to tailored documents ready for submission.
 
-Verified against CLI **v0.23.2**.
+Verified against CLI **v0.24.0**.
 
 ## Prerequisites
 

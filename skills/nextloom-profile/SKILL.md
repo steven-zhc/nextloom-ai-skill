@@ -10,7 +10,7 @@ required_tools: terminal
 
 The profile is the foundation for every generated document. Better profile, better tailoring.
 
-Verified against CLI **v0.23.2**.
+Verified against CLI **v0.24.0**.
 
 ## Prerequisites
 

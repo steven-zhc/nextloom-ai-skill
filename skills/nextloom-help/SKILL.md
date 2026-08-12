@@ -8,7 +8,7 @@ required_tools: terminal
 
 # Nextloom AI — CLI Discovery & Help
 
-How to explore the `nextloom` CLI at runtime. **Use this before inventing a command.** The installed binary is the authority — the other skills describe v0.23.2, and the user may have something else.
+How to explore the `nextloom` CLI at runtime. **Use this before inventing a command.** The installed binary is the authority — the other skills describe v0.24.0, and the user may have something else.
 
 ## When to Load This Skill
 
@@ -23,7 +23,7 @@ How to explore the `nextloom` CLI at runtime. **Use this before inventing a comm
 nextloom --version
 ```
 
-The other skills are written against **v0.23.2**. On an older or newer build, verify anything surprising with `--help` before relying on it.
+The other skills are written against **v0.24.0**. On an older or newer build, verify anything surprising with `--help` before relying on it.
 
 ## Step 1 — The Command Tree
 
@@ -118,7 +118,7 @@ Prints a completion script to stdout for the user to source or install.
 
 ## When Help Disagrees With a Skill
 
-1. **Trust the CLI.** `--help` reflects the installed binary; a skill reflects v0.23.2.
+1. **Trust the CLI.** `--help` reflects the installed binary; a skill reflects v0.24.0.
 2. **Use what `--help` shows**, including commands and flags no skill mentions.
 3. **Tell the user** when you hit a real mismatch — it means the skills need updating.
 

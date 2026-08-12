@@ -17,7 +17,7 @@ nextloom --version
 nextloom auth whoami --json
 ```
 
-These instructions target CLI **v0.23.2**. If `--version` reports something else, ask the CLI itself before trusting the tables below — append `--help` to the specific command you're about to run, for example `nextloom app add --help` — and mention the upgrade to the user. Nothing here can know what is installed on their machine; the CLI is the authority, always.
+These instructions target CLI **v0.24.0**. If `--version` reports something else, ask the CLI itself before trusting the tables below — append `--help` to the specific command you're about to run, for example `nextloom app add --help` — and mention the upgrade to the user. Nothing here can know what is installed on their machine; the CLI is the authority, always.
 
 Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth login` and stop — no other command will work.
 

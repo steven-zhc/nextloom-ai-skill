@@ -1,1 +1,625 @@
-{"$comment":"GENERATED FILE — do not hand-edit. Produced by nextloom-ai-cli `scripts/gen-reference.ts` from the CrustJS command tree (the source of truth). To update: edit the command specs in nextloom-ai-cli/src/commands/*, then run `bun run sync:reference` (regenerates this file and syncs it into nextloom-ai-nextjs).","bin":"nextloom","version":"0.23.2","tagline":"Terminal client for Nextloom — manage your profile, track applications, and generate documents, without leaving the terminal.","install":{"summary":"Install with one command. Downloads the right binary for your platform, no Node or Bun required.","steps":["curl -fsSL https://nextloom.ai/install.sh | bash"],"note":"Installs a standalone ~55 MB binary (it bundles its own runtime) to ~/.nextloom/bin and adds it to your PATH. Both `nextloom` and the shorter `nai` are installed and behave identically. You can also download a binary manually from the GitHub Releases page."},"sections":[{"id":"auth","title":"Auth","description":"Sign in and manage your session.","commands":[{"id":"login","name":"nextloom auth login","summary":"Sign in via your browser.","description":"Opens your browser to sign in with Clerk, then stores a local session token at ~/.config/nextloom/auth-<env>.json (permissions 0600) — one file per environment, so a dev session never overrides a prod one.","args":[],"flags":[],"examples":["nextloom auth login\n\n  Opening your browser to sign in...\n  Waiting for the callback...\n  Signed in as ada@example.com.","nextloom auth login --json\n\n  {\"ok\":true,\"email\":\"ada@example.com\"}"]},{"id":"logout","name":"nextloom auth logout","summary":"Revoke and clear the local session.","description":"Revokes the stored token and deletes the current environment's session file (~/.config/nextloom/auth-<env>.json). Other environments are left signed in.","args":[],"flags":[],"examples":["nextloom auth logout\n\n  Signed out.","nextloom auth logout --json\n\n  {\"ok\":true}"]},{"id":"whoami","name":"nextloom auth whoami","summary":"Show the signed-in account.","description":"Prints the currently authenticated user. With --json, emits the issuer's userinfo response unchanged, so it carries more fields than the human view shows.","args":[],"flags":[],"examples":["nextloom auth whoami\n\n  Ada Lovelace\n  ada@example.com\n  id: user_2xKkLmNpQrStUvWx","nextloom auth whoami --json\n\n  {\n    \"object\": \"oauth_user_info\",\n    \"instance_id\": \"ins_2xKkLmNpQrStUvWx\",\n    \"user_id\": \"user_2xKkLmNpQrStUvWx\",\n    \"sub\": \"user_2xKkLmNpQrStUvWx\",\n    \"email\": \"ada@example.com\",\n    \"email_verified\": true,\n    \"family_name\": \"Lovelace\",\n    \"given_name\": \"Ada\",\n    \"name\": \"Ada Lovelace\",\n    \"picture\": \"https://img.clerk.com/example\"\n  }"]}]},{"id":"profile","title":"Profile","description":"View and edit your profile: work preferences, target roles, target locations, employment types, and skills.","commands":[{"id":"profile-view","name":"nextloom profile view","summary":"Show your profile.","description":"Prints your personal details, work preferences, and links in grouped sections. EEO self-identification is hidden unless you pass --eeo.","args":[],"flags":[{"name":"--all","value":null,"required":false,"description":"Include ids, timestamps, visa details, and birthday."},{"name":"--eeo","value":null,"required":false,"description":"Include EEO self-identification (race, gender, disability, orientation)."},{"name":"--path","value":null,"required":false,"description":"Show each field as its readable name, real dotted path, and raw stored value — the path is what `profile edit --field` takes."}],"examples":["nextloom profile view","nextloom profile view --all","nextloom profile view --all --eeo\n\n  Ada Lovelace · ada@example.com\n  ──────────────────────────────\n\n  PERSONAL\n    Phone               +1 5555550142\n    Location            Austin, Texas, United States\n    Timezone            America/Chicago\n    Address             100 Example Ave\n    Postal code         78701\n    Birthday            1990-01-15\n    Living in US        Yes\n\n  WORK PREFERENCES\n    Work mode           Remote, Onsite\n    Employment          Full-time\n    Target locations    Houston, Texas (US)\n                        San Jose, California (US)\n    Salary min          $150,000 USD\n    Open to relocate    No\n    Earliest start      2026-04-12\n    US work auth        Yes\n    Needs sponsorship   No\n    Target roles        AI Engineer\n                        Backend Engineer\n                        Full Stack Engineer\n                        Java Engineer\n                        Software Architect\n\n  LINKS\n    Website             ada.example.com\n    LinkedIn            linkedin.com/in/ada-example\n    GitHub              github.com/ada-example\n\n  EEO (SELF-IDENTIFICATION)\n    Pronouns            she/her\n    Gender              Prefer not to say\n    Race                Prefer not to say\n    Hispanic/Latino     No\n    Veteran status      Not protected\n    Disability          Prefer not to say\n    Sexual orientation  Prefer not to say\n    Transgender exp.    Prefer not to say\n\n  META\n    Profile id          pRoFiLeIdExAmPlE12345\n    Created             2026-03-26\n    Updated             2026-07-08","nextloom profile view --path\n\n  Ada Lovelace · ada@example.com\n  ──────────────────────────────\n\n  PERSONAL\n    Phone               personalInfo.phoneCountryCode    +1\n                         personalInfo.phoneNumber        5555550142\n    Location            personalInfo.address.city        Austin\n                         personalInfo.address.state       Texas\n                         personalInfo.address.country     US\n    Timezone            personalInfo.timezone            America/Chicago\n\n  WORK PREFERENCES\n    Work mode           workPreferences.workMode         [\"remote\",\"onsite\"]\n    Employment          workPreferences.targetEmploymentTypes  [\"full_time\"]\n    Target locations    workPreferences.targetLocations  [{\"name\":\"Houston\",...}]\n    Salary min          workPreferences.salaryExpectationMin  150000\n    Open to relocate    workPreferences.openToRelocate   flexible\n    Target roles        workPreferences.targetJobFunctionIds  [\"ai_engineer\",...]\n\n  Set any of these with: nextloom profile edit --field <path>=<value>","nextloom profile view --json\n\n  {\"personalInfo\":{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"timezone\":\"America/Chicago\",...},\"workPreferences\":{\"workMode\":[\"remote\",\"onsite\"],...},\"links\":{\"websiteUrl\":\"https://ada.example.com\",...}}"]},{"id":"profile-edit","name":"nextloom profile edit","summary":"Edit profile fields.","description":"Set fields by their dotted path. Run `nextloom profile view --path` to list every path and its current value. Values are read-modify-write: the whole field group is re-sent with your change applied, so untouched fields keep their values. JSON array and object values are parsed.","args":[],"flags":[{"name":"--field","value":"<name>=<value>","required":false,"description":"Set a field non-interactively. Repeatable."}],"examples":["nextloom profile edit --field personalInfo.timezone=America/Chicago\n\n  Updated personalInfo.timezone: America/Los_Angeles → America/Chicago","nextloom profile edit --field workPreferences.workMode='[\"remote\",\"onsite\"]'\n\n  Updated workPreferences.workMode: [\"remote\"] → [\"remote\",\"onsite\"]","nextloom profile edit --field personalInfo.address.city=Austin --field personalInfo.address.state=Texas\n\n  Updated personalInfo.address.city: Houston → Austin\n  Updated personalInfo.address.state: → Texas","nextloom profile edit --field personalInfo.timezone=America/Chicago --json\n\n  {\"ok\":true,\"changes\":[{\"path\":\"personalInfo.timezone\",\"from\":\"America/Los_Angeles\",\"to\":\"America/Chicago\"}]}"]},{"id":"profile-skill-list","name":"nextloom profile skill list","summary":"List your skills, grouped by category.","description":"Lists the skills on your profile, grouped by the category the skill taxonomy assigns. Skills that matched nothing in the taxonomy are grouped under \"Other\". With one category, or none, the grouping is dropped and the skills are listed plainly.","args":[],"flags":[],"examples":["nextloom profile skill list\n\n  Cloud            AWS · Fly.io · Vercel\n  Databases        Cassandra · MySQL · PostgreSQL\n  DevOps           CI/CD · Docker · Jenkins · Kubernetes\n  Languages        C · Go · Java · Python · SQL · TypeScript\n  ML               AI · Generative AI · LLM · LangChain\n  Other            ai agents · api design · llms","nextloom profile skill list --json | jq -r '.[] | select(.category==\"language\") | .display_name'\n\n  C\n  Go\n  Java","nextloom profile skill list\n\n  No skills on your profile."]},{"id":"profile-skill-add","name":"nextloom profile skill add","summary":"Add a skill.","description":"Adds a skill to your profile. The name is matched against the skill taxonomy, so the stored skill may be the canonical spelling rather than exactly what you typed. Adding one you already have changes nothing.","args":[{"name":"skill","required":true,"description":"The skill to add."}],"flags":[],"examples":["nextloom profile skill add TypeScript\n\n  Added \"TypeScript\".","nextloom profile skill add typescript --json\n\n  {\"ok\":true,\"matched\":true,\"skill\":\"TypeScript\"}"]},{"id":"profile-skill-remove","name":"nextloom profile skill remove","summary":"Remove a skill.","description":"Removes a skill from your profile, matching the name case-insensitively. Removing one you do not have is not an error.","args":[{"name":"skill","required":true,"description":"The skill to remove."}],"flags":[],"examples":["nextloom profile skill remove TypeScript\n\n  Removed \"TypeScript\".","nextloom profile skill remove Fortran\n\n  \"Fortran\" was not on your profile."]}]},{"id":"applications","title":"Applications","description":"Track your job applications.","commands":[{"id":"app-list","name":"nextloom app list","summary":"List job applications.","description":"Lists your job applications, optionally filtered by status.","args":[],"flags":[{"name":"--status","value":"<status>","required":false,"description":"Filter by application status."},{"name":"--search","value":"<term>","required":false,"description":"Search by company name (case-insensitive)."},{"name":"--sort","value":"<field>","required":false,"description":"Sort by: applied_date, company_name, status, interview_date, followup_date."},{"name":"--order","value":"<asc|desc>","required":false,"description":"Sort order. Default: desc."}],"examples":["nextloom app list\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             71%  2026-08-01  Acme Corp\n  app_d4e5f6             Applied         60%  2026-07-22  Globex Inc\n  app_g7h8i9             Interviewing   100%  2026-07-14  Initech\n  app_j1k2l3             New               —  2026-07-02  boards.greenhouse.io","nextloom app list --status Applied --sort applied_date --order asc\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_d4e5f6             Applied         60%  2026-07-22  Globex Inc\n  app_a1b2c3             Applied         71%  2026-08-01  Acme Corp","nextloom app list --json | jq '.[].company_name'\n\n  \"Acme Corp\"\n  \"Globex Inc\"\n  \"Initech\""]},{"id":"app-add","name":"nextloom app add","summary":"Add a job application.","description":"Creates a job application from a job posting. Give it the job description (--detail or --file) or a URL (--url) — at least one is required. Company name and job title are extracted from the posting by AI, the same way the web app does it; you do not type them. Passing both a description and a URL is fine: the description wins.","args":[],"flags":[{"name":"--detail","value":"<text>","required":false,"description":"Job description text. Takes precedence over --url."},{"name":"--file","value":"<path>","required":false,"description":"Read the job description from a file. Use - for stdin."},{"name":"--url","value":"<url>","required":false,"description":"Job posting URL."},{"name":"--applied-date","value":"<date>","required":false,"description":"When you applied (ISO 8601). Defaults to now."},{"name":"--wait","value":null,"required":false,"description":"Wait for AI to extract the company and title. --no-wait returns as soon as it is created."}],"examples":["nextloom app add --file jd.txt\n\n  Created application app_a1b2c3\n  app_a1b2c3             New             71%  2026-08-01  Acme Corp","nextloom app add --url https://acme.example/jobs/42\n\n  Created application app_d4e5f6\n  app_d4e5f6             New               —  2026-08-01  acme.example\n  Saved the URL, but nothing was extracted from it — creating with a URL alone does not parse the posting. Re-run with --detail or --file to get the company, title, and keywords.","nextloom app add --file -\n\n  # reads the posting piped on stdin: pbpaste | nextloom app add --file -\n  Created application app_g7h8i9\n  app_g7h8i9             New            100%  2026-08-01  Initech","nextloom app add --file jd.txt --no-wait\n\n  Created application app_j1k2l3\n  app_j1k2l3             New               —  2026-08-01  —\n  Still extracting. Check again with: nextloom app view app_j1k2l3","nextloom app add --detail \"We are hiring a Senior Engineer at Acme Corp...\" --applied-date 2026-01-15 --json\n\n  {\"id\":\"app_a1b2c3\",\"company_name\":\"Acme Corp\",\"status\":\"New\",\"applied_date\":\"2026-01-15T00:00:00.000Z\"}"]},{"id":"app-view","name":"nextloom app view","summary":"Show one application.","description":"Prints one application with the AI-parsed posting: required and preferred skills, requirements, responsibilities, and benefits. Add --full for the complete job description.","args":[{"name":"id","required":true,"description":"Application id."}],"flags":[{"name":"--full","value":null,"required":false,"description":"Include the full job description, not just the summary."},{"name":"--docs","value":null,"required":false,"description":"Show which documents have been generated. Costs four extra requests, so it is opt-in."}],"examples":["nextloom app view app_a1b2c3\n\n  Acme Corp · Senior Engineer\n  ───────────────────────────\n\n    id        app_a1b2c3\n    status    Applied\n    applied   2026-08-01\n    location  Remote · Remote within the United States\n    salary    $200,000-$250,000\n    url       https://acme.example/jobs/42\n\n  SKILLS\n    TypeScript · React · PostgreSQL\n    preferred: AWS · Terraform\n\n  REQUIREMENTS\n    • 8+ years of professional software engineering experience\n\n  Full description hidden. Show it with --full.","nextloom app view app_a1b2c3 --docs\n\n  ...summary as above, then...\n\n  DOCUMENTS\n    resume        ✓\n    cover-letter  ✓\n    follow-up     —\n    thank-you     —","nextloom app view app_a1b2c3 --full\n\n  ...summary as above, then...\n\n  INTRODUCTION\n    Acme Corp is hiring a Senior Engineer to own...","nextloom app view app_a1b2c3 --json\n\n  {\"id\":\"app_a1b2c3\",\"company_name\":\"Acme Corp\",\"status\":\"Applied\",\"job_detail\":{\"job_title\":\"Senior Engineer\",\"jd_analysis\":{}}}"]},{"id":"app-update","name":"nextloom app update","summary":"Update an application's status.","description":"Updates the status of an existing application.","args":[{"name":"id","required":true,"description":"Application id."}],"flags":[{"name":"--status","value":"<status>","required":true,"description":"The new status. Valid: New, Applied, Screening, Interviewing, Offered, Declined, Accepted, Withdrawn, Archived."}],"examples":["nextloom app update app_a1b2c3 --status Interviewing\n\n  Updated app_a1b2c3 → Interviewing","nextloom app update app_a1b2c3 --status Interviewing --json\n\n  {\"id\":\"app_a1b2c3\",\"status\":\"Interviewing\"}"]},{"id":"app-delete","name":"nextloom app delete","summary":"Delete a job application.","description":"Permanently deletes a job application. On a terminal it shows you the application and asks to confirm. Anywhere it cannot ask — a pipe, a script, or --json — it refuses unless you pass --force.","args":[{"name":"id","required":true,"description":"Application id."}],"flags":[{"name":"--force","value":null,"required":false,"description":"Delete without asking. Required in scripts and with --json."}],"examples":["nextloom app delete app_a1b2c3\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             87%  2026-06-20  Acme Corp\n\n  Delete this application? [y/N] y\n  Deleted app_a1b2c3.","nextloom app delete app_a1b2c3\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             87%  2026-06-20  Acme Corp\n\n  Delete this application? [y/N]\n  Cancelled. Nothing was deleted.","nextloom app delete app_a1b2c3 --force\n\n  Deleted app_a1b2c3.","nextloom app delete app_a1b2c3 --json\n\n  {\"error\":\"Refusing to delete app_a1b2c3 without confirmation. Nothing here can prompt (not a terminal, or --json), so pass --force.\"}","nextloom app delete app_a1b2c3 --force --json\n\n  {\"id\":\"app_a1b2c3\",\"deleted\":true}"]}]},{"id":"resume","title":"Resume","description":"Manage your master resume — the foundation for all generated documents.","commands":[{"id":"resume-view","name":"nextloom resume view","summary":"Show your master resume.","description":"Prints your master resume fields (personal info, work experience, education, skills, certifications).","args":[],"flags":[],"examples":["nextloom resume view\n\n  PERSONAL\n    Full name     Ada Lovelace\n    Email         ada@example.com\n    Summary       Full-stack engineer with 8 years of experience...\n\n  WORK EXPERIENCE\n    1. Senior Engineer — Acme Corp (2020–2026)\n       Led the platform team...\n\n  EDUCATION\n    1. BS Computer Science — MIT (2016–2020)","nextloom resume view --json\n\n  {\"personal_info\":{\"full_name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",...}}"]},{"id":"resume-export","name":"nextloom resume export","summary":"Export your resume as markdown or JSON.","description":"Downloads your master resume in the requested format.","args":[],"flags":[{"name":"--format","value":"<md|json>","required":false,"description":"Output format. Default: md."},{"name":"--output","value":"<path>","required":false,"description":"Where to save the file. Default: stdout."}],"examples":["nextloom resume export --format md\n\n  # Ada Lovelace\n  Full-stack engineer...","nextloom resume export --format json --output ./resume.json\n\n  Saved resume to ./resume.json"]},{"id":"resume-import","name":"nextloom resume import","summary":"Import a resume from file.","description":"Uploads a resume file (.txt, .md, .docx, .pdf) and waits for the backend to parse it. The parsed fields become your master resume.","args":[{"name":"file","required":true,"description":"Path to resume file."}],"flags":[{"name":"--wait","value":null,"required":false,"description":"Wait for parsing to complete (default: true)."}],"examples":["nextloom resume import ./resume.pdf\n\n  Uploading resume.pdf...\n    ✓ Processing                    29s\n  Resume imported successfully.","nextloom resume import ./resume.pdf --no-wait\n\n  Import queued (job job_x1y2z3)."]}]},{"id":"generate","title":"Generate","description":"Generate documents for an application. These run asynchronously — the CLI polls until the document is ready, then downloads it. Resumes and cover letters run as a pipeline, so the CLI reports each step as it completes. A resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge. Pass --output to name it yourself.","commands":[{"id":"generate-resume","name":"nextloom generate resume","summary":"Generate a tailored resume.","description":"Generates a resume tailored to the application, then downloads it.","args":[{"name":"app-id","required":true,"description":"Application id."}],"flags":[{"name":"--output","value":"<path>","required":false,"description":"Where to save the file. Defaults to the name the web app would give it."},{"name":"--format","value":"<fmt>","required":false,"description":"Output format: md, json, docx, pdf."}],"examples":["nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf\n\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 4/5  Humanizing                52s\n    ✓ 5/5  Final check               58s\n  Saved resume to ./resume.pdf","nextloom generate resume app_a1b2c3\n\n  # Tailoring repeats when the ATS check rejects the draft, which is why a\n  # generation can take well over a minute.\n  Note: a resume already exists for this application. Regenerating replaces it and uses quota.\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 2/5  Tailoring (retry 2)       29s\n    ✓ 3/5  ATS check                 35s\n    ✓ 4/5  Humanizing             1m 22s\n    ✓ 5/5  Final check            1m 28s\n  Saved resume to ./Ada_Lovelace_Resume_Acme_Corp.md","nextloom generate resume app_a1b2c3 --json\n\n  {\"ok\":true,\"job_id\":\"job_x1y2z3\",\"output\":\"/home/ada/Ada_Lovelace_Resume_Acme_Corp.md\"}"]},{"id":"generate-cover-letter","name":"nextloom generate cover-letter","summary":"Generate a cover letter.","description":"Generates a cover letter for the application, then downloads it.","args":[{"name":"app-id","required":true,"description":"Application id."}],"flags":[{"name":"--output","value":"<path>","required":false,"description":"Where to save the file. Defaults to the name the web app would give it."},{"name":"--format","value":"<fmt>","required":false,"description":"Output format: md, json, docx, pdf."}],"examples":["nextloom generate cover-letter app_a1b2c3 --format pdf\n\n  Generating cover-letter for app_a1b2c3 (job job_y1z2x3)...\n    ✓ Queued                          1s\n    ✓ 1/3  Matching your profile      6s\n    ✓ 2/3  Writing the letter        14s\n    ✓ 3/3  Humanizing                25s\n  Saved cover-letter to ./Ada_Lovelace_Cover_Letter_Acme_Corp.pdf","nextloom generate cover-letter app_a1b2c3 --output ./cl.pdf --json\n\n  {\"ok\":true,\"job_id\":\"job_y1z2x3\",\"output\":\"cl.pdf\"}"]},{"id":"generate-follow-up","name":"nextloom generate follow-up","summary":"Generate a follow-up message.","description":"Generates a follow-up message for the application, then downloads it.","args":[{"name":"app-id","required":true,"description":"Application id."}],"flags":[{"name":"--output","value":"<path>","required":false,"description":"Where to save the file. Defaults to the name the web app would give it."},{"name":"--format","value":"<fmt>","required":false,"description":"Output format: json."}],"examples":["nextloom generate follow-up app_a1b2c3\n\n  # Follow-ups render only as JSON, and the web app has no download name for\n  # them, so this keeps the <doc>-<app-id> form rather than inventing one.\n  Generating follow-up for app_a1b2c3 (job job_z1x2y3)...\n    ✓ Processing                      6s\n  Saved follow-up to ./follow-up-app_a1b2c3.json"]},{"id":"generate-thank-you","name":"nextloom generate thank-you","summary":"Generate a thank-you note.","description":"Generates a thank-you note for the application, then downloads it.","args":[{"name":"app-id","required":true,"description":"Application id."}],"flags":[{"name":"--output","value":"<path>","required":false,"description":"Where to save the file. Defaults to the name the web app would give it."},{"name":"--format","value":"<fmt>","required":false,"description":"Output format: json."}],"examples":["nextloom generate thank-you app_a1b2c3\n\n  Generating thank-you for app_a1b2c3 (job job_a1b2c3)...\n    ✓ Processing                      5s\n  Saved thank-you to ./thank-you-app_a1b2c3.json"]},{"id":"generate-status","name":"nextloom generate status","summary":"Check an async generation job.","description":"Prints the status of a generation job. Resume and cover-letter jobs run as a pipeline and also report the step they are on; follow-up and thank-you are single-shot and report status only.","args":[{"name":"job-id","required":true,"description":"Generation job id."}],"flags":[],"examples":["nextloom generate status job_x1y2z3\n\n  status:  Completed\n  step:    5/5 Final check\n  entity:  app_a1b2c3","nextloom generate status job_z1x2y3\n\n  # A follow-up has no pipeline, so there is no step to report.\n  status:  Completed\n  entity:  app_a1b2c3","nextloom generate status job_x1y2z3 --json\n\n  {\"status\":\"completed\",\"aggregate_id\":\"app_a1b2c3\",\"workflow\":{\"current_step\":\"final_check\",\"total_steps\":5}}"]}]},{"id":"completion","title":"Completion","description":"Shell completion scripts.","commands":[{"id":"completion-shell","name":"nextloom completion shell","summary":"Generate a shell completion script.","description":"Prints a completion script for the given shell.  Pipe to `source` or save to your shell's completions directory.","args":[{"name":"shell","required":true,"description":"Target shell: bash, zsh, or fish."}],"flags":[],"examples":["nextloom completion shell bash\n\n#!/bin/bash\n# bash completion for nextloom — source this or drop it in\n#   /usr/local/etc/bash_completion.d/  (Homebrew)\n#   /etc/bash_completion.d/            (Linux)\n\n_nai() {\n  ...\n}\ncomplete -F _nai nextloom","nextloom completion shell zsh\n\n#compdef nextloom\n# zsh completion for nextloom — source this or drop it in a $fpath directory.\n\n_nai() {\n  ...\n}","nextloom completion shell fish\n\n# fish completion for nextloom — drop in ~/.config/fish/completions/nextloom.fish\n\ncomplete -c nextloom -l help -d 'Show help'\n...","nextloom completion shell bash --json\\n\\n  {\"shell\":\"bash\",\"script\":\"#!/bin/bash\\n# bash completion for nextloom...\"}"]}]}],"globalFlags":[{"name":"--json","value":null,"description":"Machine-readable output, for scripting."},{"name":"--help","value":null,"description":"Show help for any command."},{"name":"--version","value":null,"description":"Show the CLI version."}],"exitCodes":[{"code":0,"description":"Success."},{"code":1,"description":"Generic or unexpected error."},{"code":2,"description":"Usage error — an unknown command, missing argument, or bad flag."},{"code":3,"description":"A document generation job failed or timed out. The job may still finish server-side — check it with generate status."},{"code":4,"description":"Not signed in, or the stored session could not be refreshed. Run auth login again."}]}
+{
+  "$comment": "GENERATED FILE — do not hand-edit. Produced by nextloom-ai-cli `scripts/gen-reference.ts` from the CrustJS command tree (the source of truth). To update: edit the command specs in nextloom-ai-cli/src/commands/*, then run `bun run sync:reference` (regenerates this file and syncs it into nextloom-ai-nextjs).",
+  "bin": "nextloom",
+  "version": "0.24.0",
+  "tagline": "Terminal client for Nextloom — manage your profile, track applications, and generate documents, without leaving the terminal.",
+  "install": {
+    "summary": "Install with one command. Downloads the right binary for your platform, no Node or Bun required.",
+    "steps": [
+      "curl -fsSL https://nextloom.ai/install.sh | bash"
+    ],
+    "note": "Installs a standalone ~55 MB binary (it bundles its own runtime) to ~/.nextloom/bin and adds it to your PATH. Both `nextloom` and the shorter `nai` are installed and behave identically. You can also download a binary manually from the GitHub Releases page."
+  },
+  "sections": [
+    {
+      "id": "auth",
+      "title": "Auth",
+      "description": "Sign in and manage your session.",
+      "commands": [
+        {
+          "id": "login",
+          "name": "nextloom auth login",
+          "summary": "Sign in via your browser.",
+          "description": "Opens your browser to sign in with Clerk, then stores a local session token at ~/.config/nextloom/auth-<env>.json (permissions 0600) — one file per environment, so a dev session never overrides a prod one.",
+          "args": [],
+          "flags": [],
+          "examples": [
+            "nextloom auth login\n\n  Opening your browser to sign in...\n  Waiting for the callback...\n  Signed in as ada@example.com.",
+            "nextloom auth login --json\n\n  {\"ok\":true,\"email\":\"ada@example.com\"}"
+          ]
+        },
+        {
+          "id": "logout",
+          "name": "nextloom auth logout",
+          "summary": "Revoke and clear the local session.",
+          "description": "Revokes the stored token and deletes the current environment's session file (~/.config/nextloom/auth-<env>.json). Other environments are left signed in.",
+          "args": [],
+          "flags": [],
+          "examples": [
+            "nextloom auth logout\n\n  Signed out.",
+            "nextloom auth logout --json\n\n  {\"ok\":true}"
+          ]
+        },
+        {
+          "id": "whoami",
+          "name": "nextloom auth whoami",
+          "summary": "Show the signed-in account.",
+          "description": "Prints the currently authenticated user. With --json, emits the issuer's userinfo response unchanged, so it carries more fields than the human view shows.",
+          "args": [],
+          "flags": [],
+          "examples": [
+            "nextloom auth whoami\n\n  Ada Lovelace\n  ada@example.com\n  id: user_2xKkLmNpQrStUvWx",
+            "nextloom auth whoami --json\n\n  {\n    \"object\": \"oauth_user_info\",\n    \"instance_id\": \"ins_2xKkLmNpQrStUvWx\",\n    \"user_id\": \"user_2xKkLmNpQrStUvWx\",\n    \"sub\": \"user_2xKkLmNpQrStUvWx\",\n    \"email\": \"ada@example.com\",\n    \"email_verified\": true,\n    \"family_name\": \"Lovelace\",\n    \"given_name\": \"Ada\",\n    \"name\": \"Ada Lovelace\",\n    \"picture\": \"https://img.clerk.com/example\"\n  }"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "title": "Profile",
+      "description": "View and edit your profile: work preferences, target roles, target locations, employment types, and skills.",
+      "commands": [
+        {
+          "id": "profile-view",
+          "name": "nextloom profile view",
+          "summary": "Show your profile.",
+          "description": "Prints your personal details, work preferences, and links in grouped sections. EEO self-identification is hidden unless you pass --eeo.",
+          "args": [],
+          "flags": [
+            {
+              "name": "--all",
+              "value": null,
+              "required": false,
+              "description": "Include ids, timestamps, visa details, and birthday."
+            },
+            {
+              "name": "--eeo",
+              "value": null,
+              "required": false,
+              "description": "Include EEO self-identification (race, gender, disability, orientation)."
+            },
+            {
+              "name": "--path",
+              "value": null,
+              "required": false,
+              "description": "Show each field as its readable name, real dotted path, and raw stored value — the path is what `profile edit --field` takes."
+            }
+          ],
+          "examples": [
+            "nextloom profile view",
+            "nextloom profile view --all",
+            "nextloom profile view --all --eeo\n\n  Ada Lovelace · ada@example.com\n  ──────────────────────────────\n\n  PERSONAL\n    Phone               +1 5555550142\n    Location            Austin, Texas, United States\n    Timezone            America/Chicago\n    Address             100 Example Ave\n    Postal code         78701\n    Birthday            1990-01-15\n    Living in US        Yes\n\n  WORK PREFERENCES\n    Work mode           Remote, Onsite\n    Employment          Full-time\n    Target locations    Houston, Texas (US)\n                        San Jose, California (US)\n    Salary min          $150,000 USD\n    Open to relocate    No\n    Earliest start      2026-04-12\n    US work auth        Yes\n    Needs sponsorship   No\n    Target roles        AI Engineer\n                        Backend Engineer\n                        Full Stack Engineer\n                        Java Engineer\n                        Software Architect\n\n  LINKS\n    Website             ada.example.com\n    LinkedIn            linkedin.com/in/ada-example\n    GitHub              github.com/ada-example\n\n  EEO (SELF-IDENTIFICATION)\n    Pronouns            she/her\n    Gender              Prefer not to say\n    Race                Prefer not to say\n    Hispanic/Latino     No\n    Veteran status      Not protected\n    Disability          Prefer not to say\n    Sexual orientation  Prefer not to say\n    Transgender exp.    Prefer not to say\n\n  META\n    Profile id          pRoFiLeIdExAmPlE12345\n    Created             2026-03-26\n    Updated             2026-07-08",
+            "nextloom profile view --path\n\n  Ada Lovelace · ada@example.com\n  ──────────────────────────────\n\n  PERSONAL\n    Phone               personalInfo.phoneCountryCode    +1\n                         personalInfo.phoneNumber        5555550142\n    Location            personalInfo.address.city        Austin\n                         personalInfo.address.state       Texas\n                         personalInfo.address.country     US\n    Timezone            personalInfo.timezone            America/Chicago\n\n  WORK PREFERENCES\n    Work mode           workPreferences.workMode         [\"remote\",\"onsite\"]\n    Employment          workPreferences.targetEmploymentTypes  [\"full_time\"]\n    Target locations    workPreferences.targetLocations  [{\"name\":\"Houston\",...}]\n    Salary min          workPreferences.salaryExpectationMin  150000\n    Open to relocate    workPreferences.openToRelocate   flexible\n    Target roles        workPreferences.targetJobFunctionIds  [\"ai_engineer\",...]\n\n  Set any of these with: nextloom profile edit --field <path>=<value>",
+            "nextloom profile view --json\n\n  {\"personalInfo\":{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"timezone\":\"America/Chicago\",...},\"workPreferences\":{\"workMode\":[\"remote\",\"onsite\"],...},\"links\":{\"websiteUrl\":\"https://ada.example.com\",...}}"
+          ]
+        },
+        {
+          "id": "profile-edit",
+          "name": "nextloom profile edit",
+          "summary": "Edit profile fields.",
+          "description": "Set fields by their dotted path. Run `nextloom profile view --path` to list every path and its current value. Values are read-modify-write: the whole field group is re-sent with your change applied, so untouched fields keep their values. JSON array and object values are parsed.",
+          "args": [],
+          "flags": [
+            {
+              "name": "--field",
+              "value": "<name>=<value>",
+              "required": false,
+              "description": "Set a field non-interactively. Repeatable."
+            }
+          ],
+          "examples": [
+            "nextloom profile edit --field personalInfo.timezone=America/Chicago\n\n  Updated personalInfo.timezone: America/Los_Angeles → America/Chicago",
+            "nextloom profile edit --field workPreferences.workMode='[\"remote\",\"onsite\"]'\n\n  Updated workPreferences.workMode: [\"remote\"] → [\"remote\",\"onsite\"]",
+            "nextloom profile edit --field personalInfo.address.city=Austin --field personalInfo.address.state=Texas\n\n  Updated personalInfo.address.city: Houston → Austin\n  Updated personalInfo.address.state: → Texas",
+            "nextloom profile edit --field personalInfo.timezone=America/Chicago --json\n\n  {\"ok\":true,\"changes\":[{\"path\":\"personalInfo.timezone\",\"from\":\"America/Los_Angeles\",\"to\":\"America/Chicago\"}]}"
+          ]
+        },
+        {
+          "id": "profile-skill-list",
+          "name": "nextloom profile skill list",
+          "summary": "List your skills, grouped by category.",
+          "description": "Lists the skills on your profile, grouped by the category the skill taxonomy assigns. Skills that matched nothing in the taxonomy are grouped under \"Other\". With one category, or none, the grouping is dropped and the skills are listed plainly.",
+          "args": [],
+          "flags": [],
+          "examples": [
+            "nextloom profile skill list\n\n  Cloud            AWS · Fly.io · Vercel\n  Databases        Cassandra · MySQL · PostgreSQL\n  DevOps           CI/CD · Docker · Jenkins · Kubernetes\n  Languages        C · Go · Java · Python · SQL · TypeScript\n  ML               AI · Generative AI · LLM · LangChain\n  Other            ai agents · api design · llms",
+            "nextloom profile skill list --json | jq -r '.[] | select(.category==\"language\") | .display_name'\n\n  C\n  Go\n  Java",
+            "nextloom profile skill list\n\n  No skills on your profile."
+          ]
+        },
+        {
+          "id": "profile-skill-add",
+          "name": "nextloom profile skill add",
+          "summary": "Add a skill.",
+          "description": "Adds a skill to your profile. The name is matched against the skill taxonomy, so the stored skill may be the canonical spelling rather than exactly what you typed. Adding one you already have changes nothing.",
+          "args": [
+            {
+              "name": "skill",
+              "required": true,
+              "description": "The skill to add."
+            }
+          ],
+          "flags": [],
+          "examples": [
+            "nextloom profile skill add TypeScript\n\n  Added \"TypeScript\".",
+            "nextloom profile skill add typescript --json\n\n  {\"ok\":true,\"matched\":true,\"skill\":\"TypeScript\"}"
+          ]
+        },
+        {
+          "id": "profile-skill-remove",
+          "name": "nextloom profile skill remove",
+          "summary": "Remove a skill.",
+          "description": "Removes a skill from your profile, matching the name case-insensitively. Removing one you do not have is not an error.",
+          "args": [
+            {
+              "name": "skill",
+              "required": true,
+              "description": "The skill to remove."
+            }
+          ],
+          "flags": [],
+          "examples": [
+            "nextloom profile skill remove TypeScript\n\n  Removed \"TypeScript\".",
+            "nextloom profile skill remove Fortran\n\n  \"Fortran\" was not on your profile."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "applications",
+      "title": "Applications",
+      "description": "Track your job applications.",
+      "commands": [
+        {
+          "id": "app-list",
+          "name": "nextloom app list",
+          "summary": "List job applications.",
+          "description": "Lists your job applications, optionally filtered by status.",
+          "args": [],
+          "flags": [
+            {
+              "name": "--status",
+              "value": "<status>",
+              "required": false,
+              "description": "Filter by application status."
+            },
+            {
+              "name": "--search",
+              "value": "<term>",
+              "required": false,
+              "description": "Search by company name (case-insensitive)."
+            },
+            {
+              "name": "--sort",
+              "value": "<field>",
+              "required": false,
+              "description": "Sort by: applied_date, company_name, status, interview_date, followup_date."
+            },
+            {
+              "name": "--order",
+              "value": "<asc|desc>",
+              "required": false,
+              "description": "Sort order. Default: desc."
+            }
+          ],
+          "examples": [
+            "nextloom app list\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             71%  2026-08-01  Acme Corp\n  app_d4e5f6             Applied         60%  2026-07-22  Globex Inc\n  app_g7h8i9             Interviewing   100%  2026-07-14  Initech\n  app_j1k2l3             New               —  2026-07-02  boards.greenhouse.io",
+            "nextloom app list --status Applied --sort applied_date --order asc\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_d4e5f6             Applied         60%  2026-07-22  Globex Inc\n  app_a1b2c3             Applied         71%  2026-08-01  Acme Corp",
+            "nextloom app list --json | jq '.[].company_name'\n\n  \"Acme Corp\"\n  \"Globex Inc\"\n  \"Initech\""
+          ]
+        },
+        {
+          "id": "app-add",
+          "name": "nextloom app add",
+          "summary": "Add a job application.",
+          "description": "Creates a job application from a job posting and imports it in one step. The job description text is required (--file, or --file - for stdin): Nextloom does not fetch job pages, so a URL on its own cannot be imported — scrape the posting first and pass the text. Company name and job title are extracted from that text by AI, the same way the web app does it; you do not type them. --url is optional and stores the link alongside the record.",
+          "args": [],
+          "flags": [
+            {
+              "name": "--file",
+              "value": "<path>",
+              "required": true,
+              "description": "Job description text file. Use - to read it from stdin. Required."
+            },
+            {
+              "name": "--url",
+              "value": "<url>",
+              "required": false,
+              "description": "Job posting URL, stored with the record. Optional, and never fetched — it does not replace --file."
+            },
+            {
+              "name": "--applied-date",
+              "value": "<date>",
+              "required": false,
+              "description": "When you applied (ISO 8601). Defaults to now."
+            },
+            {
+              "name": "--wait",
+              "value": null,
+              "required": false,
+              "description": "Wait for AI to extract the company and title. --no-wait returns as soon as it is created."
+            }
+          ],
+          "examples": [
+            "nextloom app add --file jd.txt --url https://acme.example/jobs/42\n\n  # the usual case: you scraped the posting, so pass the text and the link\n  Created application app_a1b2c3\n  app_a1b2c3             New             71%  2026-08-01  Acme Corp",
+            "nextloom app add --file jd.txt\n\n  # no link to store — a description from an email, a PDF, or a paste\n  Created application app_d4e5f6\n  app_d4e5f6             New             64%  2026-08-01  Acme Corp",
+            "nextloom app add --file -\n\n  # reads the posting piped on stdin: pbpaste | nextloom app add --file -\n  Created application app_g7h8i9\n  app_g7h8i9             New            100%  2026-08-01  Initech",
+            "nextloom app add --url https://acme.example/jobs/42\n\n  Error: Missing required flag \"--file\"\n\n  # a URL on its own is never imported: nothing fetches the page, so the\n  # record would stay empty forever. Scrape the posting text first.",
+            "nextloom app add --file jd.txt --no-wait\n\n  Created application app_j1k2l3\n  app_j1k2l3             New               —  2026-08-01  —\n  Still extracting. Check again with: nextloom app view app_j1k2l3",
+            "nextloom app add --file jd.txt --applied-date 2026-01-15 --json\n\n  {\"id\":\"app_a1b2c3\",\"company_name\":\"Acme Corp\",\"status\":\"New\",\"applied_date\":\"2026-01-15T00:00:00.000Z\"}"
+          ]
+        },
+        {
+          "id": "app-view",
+          "name": "nextloom app view",
+          "summary": "Show one application.",
+          "description": "Prints one application with the AI-parsed posting: required and preferred skills, requirements, responsibilities, and benefits. Add --full for the complete job description.",
+          "args": [
+            {
+              "name": "id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--full",
+              "value": null,
+              "required": false,
+              "description": "Include the full job description, not just the summary."
+            },
+            {
+              "name": "--docs",
+              "value": null,
+              "required": false,
+              "description": "Show which documents have been generated. Costs four extra requests, so it is opt-in."
+            }
+          ],
+          "examples": [
+            "nextloom app view app_a1b2c3\n\n  Acme Corp · Senior Engineer\n  ───────────────────────────\n\n    id        app_a1b2c3\n    status    Applied\n    applied   2026-08-01\n    location  Remote · Remote within the United States\n    salary    $200,000-$250,000\n    url       https://acme.example/jobs/42\n\n  SKILLS\n    TypeScript · React · PostgreSQL\n    preferred: AWS · Terraform\n\n  REQUIREMENTS\n    • 8+ years of professional software engineering experience\n\n  Full description hidden. Show it with --full.",
+            "nextloom app view app_a1b2c3 --docs\n\n  ...summary as above, then...\n\n  DOCUMENTS\n    resume        ✓\n    cover-letter  ✓\n    follow-up     —\n    thank-you     —",
+            "nextloom app view app_a1b2c3 --full\n\n  ...summary as above, then...\n\n  INTRODUCTION\n    Acme Corp is hiring a Senior Engineer to own...",
+            "nextloom app view app_a1b2c3 --json\n\n  {\"id\":\"app_a1b2c3\",\"company_name\":\"Acme Corp\",\"status\":\"Applied\",\"job_detail\":{\"job_title\":\"Senior Engineer\",\"jd_analysis\":{}}}"
+          ]
+        },
+        {
+          "id": "app-update",
+          "name": "nextloom app update",
+          "summary": "Update an application's status.",
+          "description": "Updates the status of an existing application.",
+          "args": [
+            {
+              "name": "id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--status",
+              "value": "<status>",
+              "required": true,
+              "description": "The new status. Valid: New, Applied, Screening, Interviewing, Offered, Declined, Accepted, Withdrawn, Archived."
+            }
+          ],
+          "examples": [
+            "nextloom app update app_a1b2c3 --status Interviewing\n\n  Updated app_a1b2c3 → Interviewing",
+            "nextloom app update app_a1b2c3 --status Interviewing --json\n\n  {\"id\":\"app_a1b2c3\",\"status\":\"Interviewing\"}"
+          ]
+        },
+        {
+          "id": "app-delete",
+          "name": "nextloom app delete",
+          "summary": "Delete a job application.",
+          "description": "Permanently deletes a job application. On a terminal it shows you the application and asks to confirm. Anywhere it cannot ask — a pipe, a script, or --json — it refuses unless you pass --force.",
+          "args": [
+            {
+              "name": "id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--force",
+              "value": null,
+              "required": false,
+              "description": "Delete without asking. Required in scripts and with --json."
+            }
+          ],
+          "examples": [
+            "nextloom app delete app_a1b2c3\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             87%  2026-06-20  Acme Corp\n\n  Delete this application? [y/N] y\n  Deleted app_a1b2c3.",
+            "nextloom app delete app_a1b2c3\n\n  ID                     STATUS        MATCH  APPLIED     COMPANY\n  app_a1b2c3             New             87%  2026-06-20  Acme Corp\n\n  Delete this application? [y/N]\n  Cancelled. Nothing was deleted.",
+            "nextloom app delete app_a1b2c3 --force\n\n  Deleted app_a1b2c3.",
+            "nextloom app delete app_a1b2c3 --json\n\n  {\"error\":\"Refusing to delete app_a1b2c3 without confirmation. Nothing here can prompt (not a terminal, or --json), so pass --force.\"}",
+            "nextloom app delete app_a1b2c3 --force --json\n\n  {\"id\":\"app_a1b2c3\",\"deleted\":true}"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resume",
+      "title": "Resume",
+      "description": "Manage your master resume — the foundation for all generated documents.",
+      "commands": [
+        {
+          "id": "resume-view",
+          "name": "nextloom resume view",
+          "summary": "Show your master resume.",
+          "description": "Prints your master resume fields (personal info, work experience, education, skills, certifications).",
+          "args": [],
+          "flags": [],
+          "examples": [
+            "nextloom resume view\n\n  PERSONAL\n    Full name     Ada Lovelace\n    Email         ada@example.com\n    Summary       Full-stack engineer with 8 years of experience...\n\n  WORK EXPERIENCE\n    1. Senior Engineer — Acme Corp (2020–2026)\n       Led the platform team...\n\n  EDUCATION\n    1. BS Computer Science — MIT (2016–2020)",
+            "nextloom resume view --json\n\n  {\"personal_info\":{\"full_name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",...}}"
+          ]
+        },
+        {
+          "id": "resume-export",
+          "name": "nextloom resume export",
+          "summary": "Export your resume as markdown or JSON.",
+          "description": "Downloads your master resume in the requested format.",
+          "args": [],
+          "flags": [
+            {
+              "name": "--format",
+              "value": "<md|json>",
+              "required": false,
+              "description": "Output format. Default: md."
+            },
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Default: stdout."
+            }
+          ],
+          "examples": [
+            "nextloom resume export --format md\n\n  # Ada Lovelace\n  Full-stack engineer...",
+            "nextloom resume export --format json --output ./resume.json\n\n  Saved resume to ./resume.json"
+          ]
+        },
+        {
+          "id": "resume-import",
+          "name": "nextloom resume import",
+          "summary": "Import a resume from file.",
+          "description": "Uploads a resume file (.txt, .md, .docx, .pdf) and waits for the backend to parse it. The parsed fields become your master resume.",
+          "args": [
+            {
+              "name": "file",
+              "required": true,
+              "description": "Path to resume file."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--wait",
+              "value": null,
+              "required": false,
+              "description": "Wait for parsing to complete (default: true)."
+            }
+          ],
+          "examples": [
+            "nextloom resume import ./resume.pdf\n\n  Uploading resume.pdf...\n    ✓ Processing                    29s\n  Resume imported successfully.",
+            "nextloom resume import ./resume.pdf --no-wait\n\n  Import queued (job job_x1y2z3)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "generate",
+      "title": "Generate",
+      "description": "Generate documents for an application. These run asynchronously — the CLI polls until the document is ready, then downloads it. Resumes and cover letters run as a pipeline, so the CLI reports each step as it completes. A resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge. Pass --output to name it yourself.",
+      "commands": [
+        {
+          "id": "generate-resume",
+          "name": "nextloom generate resume",
+          "summary": "Generate a tailored resume.",
+          "description": "Generates a resume tailored to the application, then downloads it.",
+          "args": [
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Defaults to the name the web app would give it."
+            },
+            {
+              "name": "--format",
+              "value": "<fmt>",
+              "required": false,
+              "description": "Output format: md, json, docx, pdf."
+            }
+          ],
+          "examples": [
+            "nextloom generate resume app_a1b2c3 --format pdf --output ./resume.pdf\n\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 4/5  Humanizing                52s\n    ✓ 5/5  Final check               58s\n  Saved resume to ./resume.pdf",
+            "nextloom generate resume app_a1b2c3\n\n  # Tailoring repeats when the ATS check rejects the draft, which is why a\n  # generation can take well over a minute.\n  Note: a resume already exists for this application. Regenerating replaces it and uses quota.\n  Generating resume for app_a1b2c3 (job job_x1y2z3)...\n    ✓ Queued                          1s\n    ✓ 1/5  Benchmarking               8s\n    ✓ 2/5  Tailoring                 19s\n    ✓ 3/5  ATS check                 24s\n    ✓ 2/5  Tailoring (retry 2)       29s\n    ✓ 3/5  ATS check                 35s\n    ✓ 4/5  Humanizing             1m 22s\n    ✓ 5/5  Final check            1m 28s\n  Saved resume to ./Ada_Lovelace_Resume_Acme_Corp.md",
+            "nextloom generate resume app_a1b2c3 --json\n\n  {\"ok\":true,\"job_id\":\"job_x1y2z3\",\"output\":\"/home/ada/Ada_Lovelace_Resume_Acme_Corp.md\"}"
+          ]
+        },
+        {
+          "id": "generate-cover-letter",
+          "name": "nextloom generate cover-letter",
+          "summary": "Generate a cover letter.",
+          "description": "Generates a cover letter for the application, then downloads it.",
+          "args": [
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Defaults to the name the web app would give it."
+            },
+            {
+              "name": "--format",
+              "value": "<fmt>",
+              "required": false,
+              "description": "Output format: md, json, docx, pdf."
+            }
+          ],
+          "examples": [
+            "nextloom generate cover-letter app_a1b2c3 --format pdf\n\n  Generating cover-letter for app_a1b2c3 (job job_y1z2x3)...\n    ✓ Queued                          1s\n    ✓ 1/3  Matching your profile      6s\n    ✓ 2/3  Writing the letter        14s\n    ✓ 3/3  Humanizing                25s\n  Saved cover-letter to ./Ada_Lovelace_Cover_Letter_Acme_Corp.pdf",
+            "nextloom generate cover-letter app_a1b2c3 --output ./cl.pdf --json\n\n  {\"ok\":true,\"job_id\":\"job_y1z2x3\",\"output\":\"cl.pdf\"}"
+          ]
+        },
+        {
+          "id": "generate-follow-up",
+          "name": "nextloom generate follow-up",
+          "summary": "Generate a follow-up message.",
+          "description": "Generates a follow-up message for the application, then downloads it.",
+          "args": [
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Defaults to the name the web app would give it."
+            },
+            {
+              "name": "--format",
+              "value": "<fmt>",
+              "required": false,
+              "description": "Output format: json."
+            }
+          ],
+          "examples": [
+            "nextloom generate follow-up app_a1b2c3\n\n  # Follow-ups render only as JSON, and the web app has no download name for\n  # them, so this keeps the <doc>-<app-id> form rather than inventing one.\n  Generating follow-up for app_a1b2c3 (job job_z1x2y3)...\n    ✓ Processing                      6s\n  Saved follow-up to ./follow-up-app_a1b2c3.json"
+          ]
+        },
+        {
+          "id": "generate-thank-you",
+          "name": "nextloom generate thank-you",
+          "summary": "Generate a thank-you note.",
+          "description": "Generates a thank-you note for the application, then downloads it.",
+          "args": [
+            {
+              "name": "app-id",
+              "required": true,
+              "description": "Application id."
+            }
+          ],
+          "flags": [
+            {
+              "name": "--output",
+              "value": "<path>",
+              "required": false,
+              "description": "Where to save the file. Defaults to the name the web app would give it."
+            },
+            {
+              "name": "--format",
+              "value": "<fmt>",
+              "required": false,
+              "description": "Output format: json."
+            }
+          ],
+          "examples": [
+            "nextloom generate thank-you app_a1b2c3\n\n  Generating thank-you for app_a1b2c3 (job job_a1b2c3)...\n    ✓ Processing                      5s\n  Saved thank-you to ./thank-you-app_a1b2c3.json"
+          ]
+        },
+        {
+          "id": "generate-status",
+          "name": "nextloom generate status",
+          "summary": "Check an async generation job.",
+          "description": "Prints the status of a generation job. Resume and cover-letter jobs run as a pipeline and also report the step they are on; follow-up and thank-you are single-shot and report status only.",
+          "args": [
+            {
+              "name": "job-id",
+              "required": true,
+              "description": "Generation job id."
+            }
+          ],
+          "flags": [],
+          "examples": [
+            "nextloom generate status job_x1y2z3\n\n  status:  Completed\n  step:    5/5 Final check\n  entity:  app_a1b2c3",
+            "nextloom generate status job_z1x2y3\n\n  # A follow-up has no pipeline, so there is no step to report.\n  status:  Completed\n  entity:  app_a1b2c3",
+            "nextloom generate status job_x1y2z3 --json\n\n  {\"status\":\"completed\",\"aggregate_id\":\"app_a1b2c3\",\"workflow\":{\"current_step\":\"final_check\",\"total_steps\":5}}"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "completion",
+      "title": "Completion",
+      "description": "Shell completion scripts.",
+      "commands": [
+        {
+          "id": "completion-shell",
+          "name": "nextloom completion shell",
+          "summary": "Generate a shell completion script.",
+          "description": "Prints a completion script for the given shell.  Pipe to `source` or save to your shell's completions directory.",
+          "args": [
+            {
+              "name": "shell",
+              "required": true,
+              "description": "Target shell: bash, zsh, or fish."
+            }
+          ],
+          "flags": [],
+          "examples": [
+            "nextloom completion shell bash\n\n#!/bin/bash\n# bash completion for nextloom — source this or drop it in\n#   /usr/local/etc/bash_completion.d/  (Homebrew)\n#   /etc/bash_completion.d/            (Linux)\n\n_nai() {\n  ...\n}\ncomplete -F _nai nextloom",
+            "nextloom completion shell zsh\n\n#compdef nextloom\n# zsh completion for nextloom — source this or drop it in a $fpath directory.\n\n_nai() {\n  ...\n}",
+            "nextloom completion shell fish\n\n# fish completion for nextloom — drop in ~/.config/fish/completions/nextloom.fish\n\ncomplete -c nextloom -l help -d 'Show help'\n...",
+            "nextloom completion shell bash --json\\n\\n  {\"shell\":\"bash\",\"script\":\"#!/bin/bash\\n# bash completion for nextloom...\"}"
+          ]
+        }
+      ]
+    }
+  ],
+  "globalFlags": [
+    {
+      "name": "--json",
+      "value": null,
+      "description": "Machine-readable output, for scripting."
+    },
+    {
+      "name": "--help",
+      "value": null,
+      "description": "Show help for any command."
+    },
+    {
+      "name": "--version",
+      "value": null,
+      "description": "Show the CLI version."
+    }
+  ],
+  "exitCodes": [
+    {
+      "code": 0,
+      "description": "Success."
+    },
+    {
+      "code": 1,
+      "description": "Generic or unexpected error."
+    },
+    {
+      "code": 2,
+      "description": "Usage error — an unknown command, missing argument, or bad flag."
+    },
+    {
+      "code": 3,
+      "description": "A document generation job failed or timed out. The job may still finish server-side — check it with generate status."
+    },
+    {
+      "code": 4,
+      "description": "Not signed in, or the stored session could not be refreshed. Run auth login again."
+    }
+  ]
+}

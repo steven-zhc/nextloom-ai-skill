@@ -114,7 +114,7 @@ Compatible with any agent that supports the standard — Claude Code, Codex, Cur
 
 ## CLI Reference
 
-Verified against CLI **v0.23.2**. Every command supports `--json` for structured output and `--env dev|prod` for environment switching.
+Verified against CLI **v0.24.0**. Every command supports `--json` for structured output and `--env dev|prod` for environment switching.
 
 | Command | Description |
 |---------|-------------|
@@ -145,7 +145,7 @@ The full machine-readable reference lives at [nextloom.ai/cli-reference.json](ht
 
 ### Three things that trip agents up
 
-1. **`app add` takes no positional argument.** Use `--detail`, `--file`, or `--url`. A bare `--url` records the link without parsing the posting.
+1. **`app add` requires `--file` and takes no positional argument.** Nextloom never fetches a job page, so `--url` alone is rejected — scrape the posting yourself and pass the text, keeping `--url` for the link.
 2. **`generate status` takes a job id**, not an application id.
 3. **`app delete` requires `--force`** under `--json` or any non-interactive shell.
 

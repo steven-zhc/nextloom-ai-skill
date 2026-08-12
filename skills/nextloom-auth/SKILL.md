@@ -10,7 +10,7 @@ required_tools: terminal
 
 Manage Nextloom AI authentication via the `nextloom` CLI. Nextloom uses browser-based PKCE OAuth with a local loopback callback — no passwords, no API keys.
 
-Verified against CLI **v0.23.2**.
+Verified against CLI **v0.24.0**.
 
 ## Commands
 

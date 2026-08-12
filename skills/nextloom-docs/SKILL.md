@@ -10,7 +10,7 @@ required_tools: terminal
 
 Generate documents tailored to a specific application, using its job description and the user's master resume.
 
-Verified against CLI **v0.23.2**.
+Verified against CLI **v0.24.0**.
 
 ## Prerequisites
 
