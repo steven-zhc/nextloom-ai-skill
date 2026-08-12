@@ -49,6 +49,14 @@ const EXTRA_GLOBAL_FLAGS = new Map([['--env', '<env>']])
 const argv = process.argv.slice(2)
 const strict = argv.includes('--strict')
 const refFlagIndex = argv.indexOf('--ref')
+
+// `--ref` with no value used to fall through to `null`, which silently fetched
+// the live endpoint AND flipped the error path to fail-soft — the opposite of
+// what someone asking for a pinned, offline run wants. Fail loudly instead.
+if (refFlagIndex !== -1 && !argv[refFlagIndex + 1]) {
+  console.error('check-drift: --ref needs a path, e.g. --ref cli-reference.json')
+  process.exit(2)
+}
 const refPath = refFlagIndex !== -1 ? argv[refFlagIndex + 1] : null
 
 const color = process.stdout.isTTY && !process.env.NO_COLOR
@@ -335,13 +343,31 @@ const checkCommand = (entry, commands, globalFlags, groups) => {
 
 // ── Collect the files to check ────────────────────────────────────────
 
-const collectFiles = async () => {
-  const files = [join(ROOT, 'README.md')]
-  const skillsDir = join(ROOT, 'skills')
-  for (const entry of await readdir(skillsDir, { withFileTypes: true })) {
-    if (entry.isDirectory()) files.push(join(skillsDir, entry.name, 'SKILL.md'))
+/**
+ * Directories that never contain skill documentation.
+ *
+ * `.github` is deliberately NOT here — SUBMIT_AWESOME.md describes the CLI and
+ * can drift like anything else. It already carried a stale `nai` reference once.
+ */
+const IGNORED_DIRS = new Set(['node_modules', '.git'])
+
+/**
+ * Every Markdown file in the repo, found by walking rather than by listing.
+ *
+ * The previous version hardcoded `README.md` plus `skills/*​/SKILL.md`. Adding a
+ * CONTRIBUTING.md or a docs page with commands in it would then be checked by
+ * nothing, and the run would still print PASS — silence reading as coverage,
+ * which is the same way the fenced-only extractor hid the README table bug.
+ */
+const collectFiles = async (dir = ROOT) => {
+  const files = []
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (IGNORED_DIRS.has(entry.name)) continue
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) files.push(...(await collectFiles(path)))
+    else if (entry.name.endsWith('.md')) files.push(path)
   }
-  return files
+  return files.sort()
 }
 
 // ── Main ──────────────────────────────────────────────────────────────

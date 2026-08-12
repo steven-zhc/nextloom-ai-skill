@@ -29,7 +29,7 @@ Adds the [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) pl
 
 ### What it does
 
-Nextloom AI Skills turn your AI agent (Claude Code, Codex, Cursor) into a job search assistant. 7 skills covering the full application lifecycle:
+Nextloom AI Skills turn your AI agent (Claude Code, Codex, Cursor) into a job search assistant, covering the full application lifecycle:
 
 - **nextloom**: Full workflow — auth → add job → generate tailored documents → track status
 - **nextloom-auth**: OAuth authentication management

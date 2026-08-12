@@ -41,7 +41,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node scripts/check-drift.mjs --ref cli-reference.json
+
+      # The guard's own tests run FIRST. A guard that has silently stopped
+      # detecting anything still prints "drift: PASS" — twice during development
+      # it did exactly that. These tests pin both of those regressions.
+      - name: Test the drift guard
+        run: npm test
+
+      - name: Check skills against the pinned reference
+        run: node scripts/check-drift.mjs --ref cli-reference.json
 
   live:
     name: pinned reference still matches the CLI
