@@ -409,13 +409,13 @@
     {
       "id": "documents",
       "title": "Documents",
-      "description": "Generate, list, and download the documents for an application. `doc generate` runs an AI pipeline — the CLI polls until it is ready, then downloads it — and replaces any existing document of that type, spending quota. `doc get` only reads: the server renders each format from the stored document, so exporting a resume you already have as PDF costs one request and no quota. Resumes and cover letters run as pipelines and report each step; a resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge.",
+      "description": "Generate, list, and download the documents for an application. Generating runs an AI pipeline and replaces what was there; downloading only reads.",
       "commands": [
         {
           "id": "doc-generate",
           "name": "nextloom doc generate",
           "summary": "Generate a document for an application.",
-          "description": "Runs the AI pipeline for a document type, waits for it, and downloads the result. This replaces any existing document of that type and consumes quota — to fetch one you already have, use `doc get`. Resumes run five steps (benchmark, tailor, ATS check, humanize, final check) and cover letters three; follow-ups and thank-you notes are single-shot. The CLI streams progress and downloads the file before returning, so do not poll.",
+          "description": "Runs the AI pipeline for a document type, waits for it, and downloads the result. This replaces any existing document of that type and consumes quota — to fetch one you already have, use `doc get`. Resumes run five steps (benchmark, tailor, ATS check, humanize, final check) and cover letters three; follow-ups and thank-you notes are single-shot. A resume may loop back to tailoring when the ATS check rejects a draft, which shows as a retry. The CLI streams progress and downloads the file before returning, so do not poll. Saved files use the same name the web app downloads them under — <Your_Name>_Resume_<Company>.<ext> — so the two do not diverge.",
           "args": [
             {
               "name": "type",

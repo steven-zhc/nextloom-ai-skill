@@ -84,7 +84,7 @@ The human-readable page is https://nextloom.ai/cli-reference.
 | 0 | Success |
 | 1 | Generic or unexpected error |
 | 2 | Usage error — unknown command, missing argument, bad flag |
-| 3 | A generation job failed or timed out. It may still finish server-side — check `nextloom doc status <job-id>` |
+| 3 | A job failed or timed out. It may still finish server-side — check the output instead of the job: `nextloom doc list <app-id>` for a document, `nextloom resume view` for an import. `nextloom doc status <job-id>` gives the reason, if you still have the id. |
 | 4 | Not signed in, or the stored session could not be refreshed |
 
 ## Environment Variables

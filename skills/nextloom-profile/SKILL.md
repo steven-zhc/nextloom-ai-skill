@@ -119,6 +119,8 @@ nextloom resume import ./resume.pdf
 
 `resume import` uploads and parses the file, waiting for processing to finish. Add `--no-wait` to queue it and return immediately.
 
+If the wait times out (exit 3), the parse may still land server-side. Check with `nextloom resume view` rather than re-importing — a second import re-parses the same file and overwrites the master resume.
+
 ## Common Workflows
 
 ### New User Setup
