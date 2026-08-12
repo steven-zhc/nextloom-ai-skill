@@ -126,9 +126,8 @@ Verified against CLI **v0.23.2**. Every command supports `--json` for structured
 | `nextloom profile skill add <skill>` | Add a skill |
 | `nextloom profile skill remove <skill>` | Remove a skill |
 | `nextloom app list` | List applications (`--status`, `--search`, `--sort`, `--order`) |
-| `nextloom app add --file <path>` | Add a job from a job-description file |
-| `nextloom app add --detail <text>` | Add a job from description text |
-| `nextloom app add --url <url>` | Add a job by URL — records the link only, does not parse it |
+| `nextloom app add --file <path>` | Add a job from a job-description file (`--file -` for stdin) |
+| `nextloom app add --file <path> --url <url>` | Same, keeping the posting link — Nextloom never fetches it |
 | `nextloom app view <id>` | View an application (`--docs`, `--full`) |
 | `nextloom app update <id> --status <status>` | Update application status |
 | `nextloom app delete <id> --force` | Delete an application |
@@ -155,6 +154,7 @@ The full machine-readable reference lives at [nextloom.ai/cli-reference.json](ht
 `cli-reference.json` in this repo is a pinned snapshot of the CLI's published command tree. `scripts/check-drift.mjs` checks every command written in these skills — in fenced blocks **and** in Markdown tables — against it.
 
 ```bash
+npm test                 # the guard's own tests
 npm run check            # against the pin: hermetic, no network
 npm run check:live       # against https://nextloom.ai/cli-reference.json
 npm run sync:reference   # refresh the pin after a CLI release

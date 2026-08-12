@@ -56,11 +56,7 @@ nextloom app add --file ~/Downloads/jd.txt --json
 pbpaste | nextloom app add --file - --json
 ```
 
-Prefer `--file` over `--detail` for anything posting-sized: a real description runs to several KB with quotes, `$`, and newlines, all of which the shell will mangle or truncate as a command-line argument. `--detail` is for a short blurb pasted straight into the conversation:
-
-```bash
-nextloom app add --detail "We are hiring a Senior Engineer at Acme Corp..." --json
-```
+Text pasted into the conversation goes in the same way — write it to a file, or pipe it. There is no flag for inline text: a real description runs to several KB with quotes, `$`, and newlines, which the shell mangles or truncates as a command-line argument, so `--file` is the only input.
 
 ### Case 3 — a link you cannot get the text out of
 
@@ -148,7 +144,8 @@ nextloom generate status job_x1y2z3 --json
 |---------|-----------|
 | Exit code 4 | Run `nextloom auth login` |
 | Exit code 3 | Generation failed or timed out. Check `nextloom generate status <job-id>`. Offer to retry. |
-| Exit code 2 on `app add` | Usually a positional argument. Use `--detail`, `--file`, or `--url`. |
+| `Missing required flag "--file"` | You passed `--url` alone, or no input at all. The posting text is mandatory — scrape or ask for it, write it to a file, and re-run with `--file`. |
+| Exit code 2 on `app add` | A positional argument, or a file with no usable text in it. Pass the posting via `--file <path>`. |
 | An **existing** record has no company or title | It was added elsewhere with a URL and no text, so no import ever ran. You cannot repair it — there is no re-import command. Fetching the text and adding it creates a *second* record, so say that plainly first, and only proceed if the user wants it; then offer to `app delete` the empty one. Never do this silently. Do not create this situation yourself: see Step 1. |
 | No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
 | Generation keeps retrying | The ATS check is rejecting drafts. Suggest reviewing the master resume. |

@@ -23,7 +23,7 @@ Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth
 
 ## Five rules that are easy to get wrong
 
-1. **`app add` takes no positional argument, and Nextloom never fetches a URL.** You must supply the posting text — `--file` for anything posting-sized, `--detail` only for short pasted text. A bare `--url` saves the link and runs no import at all: the record stays permanently empty. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
+1. **`app add` requires `--file`, and Nextloom never fetches a URL.** You supply the posting text; there is no flag for inline text and no positional argument. `--url` alone is rejected outright (`Missing required flag "--file"`) because nothing would ever parse it. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
 3. **`generate status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
@@ -43,16 +43,16 @@ The company, title, and keywords are extracted by AI from the posting text — a
 nextloom app add --file /tmp/jd.txt --url https://acme.example/jobs/42 --json
 ```
 
-Other ways in:
+When there is no link to store, pass the text alone. Stdin works the same way:
 
 ```bash
-nextloom app add --detail "We are hiring a Senior Engineer at Acme Corp..." --json
+nextloom app add --file ~/Downloads/jd.txt --json
 pbpaste | nextloom app add --file - --url https://acme.example/jobs/42 --json
 ```
 
-`--file -` reads the posting from stdin. Use `--detail` only for short text pasted into the conversation — a full description belongs in a file, since the shell mangles multi-KB text containing quotes and newlines.
+`--file -` reads the posting from stdin, and refuses a terminal rather than hanging, so pipe something in.
 
-Adding with `--url` and no text is never right: no import runs, and the record stays empty. If the text cannot be obtained, tell the user instead of creating a blank record.
+Adding with `--url` and no text is rejected before any request: no import would run, and the record would stay empty. If the text cannot be obtained, tell the user instead of creating a blank record.
 
 Save the returned `id`. Every later step needs it.
 
@@ -117,7 +117,7 @@ nextloom app list --status Interviewing --json
 nextloom app list --search stripe --json
 nextloom app list --sort applied_date --order asc --json
 nextloom app add --file jd.txt --url https://acme.example/jobs/42 --json
-nextloom app add --detail "<job description text>" --applied-date 2026-01-15 --json
+nextloom app add --file jd.txt --applied-date 2026-01-15 --json
 nextloom app add --file jd.txt --no-wait --json
 nextloom app view app_a1b2c3 --json
 nextloom app view app_a1b2c3 --docs
