@@ -119,11 +119,11 @@ nextloom resume import ./resume.pdf
 
 ## Filling an Application Form
 
-`profile view --all --json` is the answer sheet for an ATS form — name, email, phone, address, links, work authorization, sponsorship, relocation, start date, salary. Read it **before** asking the user for any of it.
+`profile view --all --eeo --json` is the answer sheet for an ATS form — name, email, phone, address, links, work authorization, sponsorship, relocation, start date, salary, and the voluntary self-identification answers. Read it **before** asking the user for any of it.
 
 It does not cover: whether they have worked at that company before, how they heard about the role, or work eligibility in any country other than the US — `workPreferences.authorizedToWorkInUS` says nothing about Canada or the EU, and inferring one from the other is a legal declaration you are not entitled to make.
 
-Self-identification data (`--eeo`) is stored, but storing it is not permission to submit it. Ask first, every time; leaving it blank is always a valid answer.
+Self-identification answers (`--eeo`) are filled in like any other field — the user gave them on nextloom.ai for this purpose. Use them verbatim and never derive one: a missing answer means they declined that question, which is their right, not a gap for you to close.
 
 See `nextloom-apply` for the full field mapping.
 

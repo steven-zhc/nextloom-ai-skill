@@ -111,10 +111,10 @@ Three steps: match profile → write → humanize.
 When you are filling a form on the company's site, **read the profile before asking the user anything.** Most of what an ATS asks is already stored — asking for it wastes their time and makes the tool look like it does not know them.
 
 ```bash
-nextloom profile view --all --json
+nextloom profile view --all --eeo --json
 ```
 
-One call, then answer from it:
+`--eeo` adds the self-identification answers; without it that section is absent and you will think the user never provided them. One call, then answer from it:
 
 | The form asks | Profile path |
 |---|---|
@@ -145,9 +145,20 @@ Ask for these in one batch, not one at a time.
 
 ### Voluntary self-identification
 
-Race, gender, veteran, and disability answers live behind `nextloom profile view --eeo` (`eeo.race`, `eeo.gender`, `eeo.veteranStatus`, `eeo.disabilityStatus`, and others). Having them does not mean filling them in.
+Fill this section from the profile like any other. The user supplied these answers on nextloom.ai for exactly this purpose, so asking again is friction, not diligence.
 
-**Ask before you touch that section, every time.** These are protected characteristics, the questions are voluntary by law, and declining to answer is a valid answer. If the user does not want to decide, leave the whole section blank and say so.
+`--eeo` adds an `eeo` object to the JSON:
+
+| The form asks | Profile path |
+|---|---|
+| Gender | `eeo.gender` |
+| Race / ethnicity | `eeo.race` · `eeo.hispanicLatino` |
+| Veteran status | `eeo.veteranStatus` |
+| Disability status | `eeo.disabilityStatus` |
+| Pronouns | `eeo.pronouns` |
+| Sexual orientation · transgender experience | `eeo.sexualOrientation` · `eeo.transgenderExperience` |
+
+**Use the stored value verbatim, and never derive one.** A missing answer is a real answer — the user declined that question, and these are voluntary by law. Do not infer gender from a name, veteran status from work history, or anything else from anything else. If the profile has no value and the form demands one, choose its decline option ("prefer not to say"); if it has none, leave the field blank and say so in your summary.
 
 ### Fill, then stop
 
