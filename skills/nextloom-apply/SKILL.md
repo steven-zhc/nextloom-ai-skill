@@ -160,6 +160,21 @@ Fill this section from the profile like any other. The user supplied these answe
 
 **Use the stored value verbatim, and never derive one.** A missing answer is a real answer — the user declined that question, and these are voluntary by law. Do not infer gender from a name, veteran status from work history, or anything else from anything else. If the profile has no value and the form demands one, choose its decline option ("prefer not to say"); if it has none, leave the field blank and say so in your summary.
 
+### When browser automation cannot reach the form
+
+Most ATS forms on a company's careers page are an **embedded cross-origin iframe** — Greenhouse, Lever, Workday, Ashby. Accessibility-tree tools read the outer page and find an empty shell; coordinate clicking is fragile on custom dropdowns; and file upload is impossible, because clicking "Attach" opens the OS file picker, which no browser tool can touch.
+
+Do not burn attempts on it. **Hand off to the Nextloom Chrome extension**, which exists for this: its background worker enumerates every frame and messages a content script inside each one, so it is already past the iframe boundary, and it sets the file on the `<input type="file">` directly rather than going through the picker. It ships adapters for Greenhouse, Lever, Workday, Ashby, Workable, iCIMS, Taleo, SmartRecruiters, and a dozen more.
+
+Generate the documents first — the extension attaches the PDFs the API already holds:
+
+```bash
+nextloom doc generate resume app_a1b2c3 --format pdf
+nextloom doc generate cover-letter app_a1b2c3 --format pdf
+```
+
+Then tell the user to open the posting and click the Nextloom button, and hand them the answers to the questions the extension cannot know — worked-here-before, how-they-heard, referral. That is a complete handoff, not a failure.
+
 ### Fill, then stop
 
 Fill every field you can justify, then hand back for review. **Do not submit.** Say what you filled, what you left blank, and what you guessed at — an application is sent once, and the user is the one whose name is on it.
