@@ -27,7 +27,7 @@ Exit code 4 on the first means the user must run `nextloom auth login` — stop 
 
 **One job, one `app add` call.** Get the text *before* you touch the CLI, then create and import in that single command. Never add a record and fix it afterwards — there is no follow-up command that can (`app update` takes `--status` only, and nothing re-parses a posting into an existing record), and a second `app add` does not replace the first, it creates another row. If you are not holding the description text, you are not ready to run the command.
 
-`app add` takes no positional argument — always use a flag. Which flags you use depends on what the user gave you:
+`app add` has no positional argument — always use a flag. A bare path is not an error, it is **silently ignored**: `app add jd.txt --file other.txt` imports `other.txt` and says nothing about `jd.txt`. Never write the path twice. Which flags you use depends on what the user gave you:
 
 | The user gives you | You do | Command |
 |---|---|---|
@@ -144,8 +144,8 @@ nextloom generate status job_x1y2z3 --json
 |---------|-----------|
 | Exit code 4 | Run `nextloom auth login` |
 | Exit code 3 | Generation failed or timed out. Check `nextloom generate status <job-id>`. Offer to retry. |
-| `Missing required flag "--file"` | You passed `--url` alone, or no input at all. The posting text is mandatory — scrape or ask for it, write it to a file, and re-run with `--file`. |
-| Exit code 2 on `app add` | A positional argument, or a file with no usable text in it. Pass the posting via `--file <path>`. |
+| `Missing required flag "--file"` (exit 1) | You passed `--url` alone, a bare path, or nothing. The posting text is mandatory — scrape or ask for it, write it to a file, and re-run with `--file`. Note this is exit **1**, not the usual usage code: the parser rejects it before the command runs. |
+| Exit code 2 on `app add` | The command ran and refused its input: an unreadable `--file` path, a file with no usable text, or a bad `--applied-date`. Read the message — it names the problem. |
 | An **existing** record has no company or title | It was added elsewhere with a URL and no text, so no import ever ran. You cannot repair it — there is no re-import command. Fetching the text and adding it creates a *second* record, so say that plainly first, and only proceed if the user wants it; then offer to `app delete` the empty one. Never do this silently. Do not create this situation yourself: see Step 1. |
 | No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
 | Generation keeps retrying | The ATS check is rejecting drafts. Suggest reviewing the master resume. |

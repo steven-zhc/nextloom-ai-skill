@@ -145,7 +145,7 @@ The full machine-readable reference lives at [nextloom.ai/cli-reference.json](ht
 
 ### Three things that trip agents up
 
-1. **`app add` requires `--file` and takes no positional argument.** Nextloom never fetches a job page, so `--url` alone is rejected — scrape the posting yourself and pass the text, keeping `--url` for the link.
+1. **`app add` requires `--file`, and a bare path is ignored rather than rejected.** Nextloom never fetches a job page, so `--url` alone fails — scrape the posting yourself and pass the text, keeping `--url` for the link.
 2. **`generate status` takes a job id**, not an application id.
 3. **`app delete` requires `--force`** under `--json` or any non-interactive shell.
 

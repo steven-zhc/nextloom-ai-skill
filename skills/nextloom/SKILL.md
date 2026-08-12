@@ -23,7 +23,7 @@ Exit code 4 on `whoami` means not signed in. Tell the user to run `nextloom auth
 
 ## Five rules that are easy to get wrong
 
-1. **`app add` requires `--file`, and Nextloom never fetches a URL.** You supply the posting text; there is no flag for inline text and no positional argument. `--url` alone is rejected outright (`Missing required flag "--file"`) because nothing would ever parse it. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
+1. **`app add` requires `--file`, and Nextloom never fetches a URL.** You supply the posting text; there is no flag for inline text and no positional argument — a bare path is silently ignored, not rejected. `--url` alone fails with `Missing required flag "--file"` (exit 1) because nothing would ever parse it. Pass `--url` *alongside* the text when there is a link — it is optional, and text with no URL is a perfectly good add.
 2. **Generation commands already wait.** They stream per-step progress and download the file. Do not poll.
 3. **`generate status` takes a job id** (`job_x1y2z3`), not an application id.
 4. **`profile edit` uses `--field <path>=<value>`** with dotted paths. Run `nextloom profile view --path` to discover them. Never guess a path.
