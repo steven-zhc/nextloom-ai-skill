@@ -45,7 +45,25 @@ Exit code 4 on the first means the user must run `nextloom auth login` — stop 
 nextloom app add --file /tmp/jd.txt --url https://acme.example/jobs/42 --json
 ```
 
-Pass `--url` here even though the text is what gets parsed. It is the only way the posting URL is ever stored, and no command can add it afterwards (`app update` takes `--status` only).
+Pass `--url` here even though the text is what gets parsed — and pass the *right* URL, which is not always the one you scraped from.
+
+**Store the link a person would open.** The posting URL is how the browser extension later recognises a page as this application: it compares the address bar against the stored `job_url` as an exact string. A near-miss does not warn you — the extension simply concludes the job is untracked and offers to save it again, which is how duplicates are born.
+
+So before passing `--url`:
+
+| Problem | Wrong | Right |
+|---|---|---|
+| Scraped from an API | `boards-api.greenhouse.io/v1/boards/instacart/jobs/8110286` | `www.instacart.careers/job?id=8110286` |
+| Tracking parameters | `apply.workable.com/…/j/E96D7950A5?utm_source=jobright&jr_id=6a29…` | `apply.workable.com/…/j/E96D7950A5` |
+| Redirect target vs shared link | whichever the browser happened to land on | the link the user gave you |
+
+Strip `utm_*`, `gh_src`, `jr_id`, `ref`, `source`. Keep everything that identifies the job — `?id=8110286` and `?gh_jid=` are the posting, not tracking.
+
+If a record was saved without a URL, or with the wrong one, fix it in place. Do not add the job again — that costs a second extraction and leaves a duplicate the server will not merge:
+
+```bash
+nextloom app update app_a1b2c3 --url https://www.instacart.careers/job?id=8110286
+```
 
 ### Case 2 — the user has the description, no link
 

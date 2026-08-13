@@ -129,7 +129,7 @@ Verified against CLI **v0.24.0**. Every command supports `--json` for structured
 | `nextloom app add --file <path>` | Add a job from a job-description file (`--file -` for stdin) |
 | `nextloom app add --file <path> --url <url>` | Same, keeping the posting link — Nextloom never fetches it |
 | `nextloom app view <id>` | View an application (`--docs`, `--full`) |
-| `nextloom app update <id> --status <status>` | Update application status |
+| `nextloom app update <id> --status <status>` | Update status, and `--url` / `--company` / dates |
 | `nextloom app delete <id> --force` | Delete an application |
 | `nextloom resume view` | View your master resume |
 | `nextloom resume export --format <fmt>` | Export the resume as md or json |

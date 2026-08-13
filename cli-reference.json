@@ -285,8 +285,8 @@
         {
           "id": "app-update",
           "name": "nextloom app update",
-          "summary": "Update an application's status.",
-          "description": "Updates the status of an existing application.",
+          "summary": "Update an application.",
+          "description": "Updates an existing application in place. Pass at least one field. --url is worth knowing about: the posting link is how the browser extension recognises a page as one of your applications, and a record saved without one cannot be matched later — this is the only way to attach it without adding the application a second time.",
           "args": [
             {
               "name": "id",
@@ -298,12 +298,44 @@
             {
               "name": "--status",
               "value": "<status>",
-              "required": true,
+              "required": false,
               "description": "The new status. Valid: New, Applied, Screening, Interviewing, Offered, Declined, Accepted, Withdrawn, Archived."
+            },
+            {
+              "name": "--url",
+              "value": "<url>",
+              "required": false,
+              "description": "Posting URL. Use the link a person would open, not an API endpoint — it is matched exactly."
+            },
+            {
+              "name": "--company",
+              "value": "<name>",
+              "required": false,
+              "description": "Company name, when the AI import got it wrong."
+            },
+            {
+              "name": "--applied-date",
+              "value": "<date>",
+              "required": false,
+              "description": "When you applied (ISO 8601)."
+            },
+            {
+              "name": "--followup-date",
+              "value": "<date>",
+              "required": false,
+              "description": "When to follow up (ISO 8601)."
+            },
+            {
+              "name": "--interview-date",
+              "value": "<date>",
+              "required": false,
+              "description": "Scheduled interview (ISO 8601)."
             }
           ],
           "examples": [
             "nextloom app update app_a1b2c3 --status Interviewing\n\n  Updated app_a1b2c3 → Interviewing",
+            "nextloom app update app_a1b2c3 --url https://acme.example/jobs/42\n\n  # attaches the posting link to a record added without one, so the browser\n  # extension can recognise the page later\n  Updated app_a1b2c3 → job_url",
+            "nextloom app update app_a1b2c3 --interview-date 2026-02-05 --status Interviewing\n\n  Updated app_a1b2c3 → Interviewing, interview_date",
             "nextloom app update app_a1b2c3 --status Interviewing --json\n\n  {\"id\":\"app_a1b2c3\",\"status\":\"Interviewing\"}"
           ]
         },

@@ -62,13 +62,17 @@ The default view shows company, job title, status, applied date, location, salar
 - `--docs` adds which documents exist (resume, cover letter, follow-up, thank-you).
 - `--full` adds the complete job description.
 
-## Update Status
+## Update an Application
 
 ```bash
 nextloom app update app_a1b2c3 --status Interviewing --json
+nextloom app update app_a1b2c3 --interview-date 2026-02-05 --json
+nextloom app update app_a1b2c3 --url https://www.instacart.careers/job?id=8110286
 ```
 
-`--status` is required.
+Pass at least one of `--status`, `--url`, `--company`, `--applied-date`, `--followup-date`, `--interview-date`. Only what you pass is changed.
+
+`--url` is the one worth knowing about. The posting link is how the browser extension recognises a page as this application, matched as an exact string — so a record saved without one, or with a scraped API endpoint instead of the page a person opens, will never be matched. Fixing it here is the alternative to adding the job a second time, which costs another extraction and leaves a duplicate the server will not merge.
 
 | Status | Meaning |
 |--------|---------|
