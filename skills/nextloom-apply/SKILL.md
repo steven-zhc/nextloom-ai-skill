@@ -8,108 +8,247 @@ required_tools: terminal
 
 # Nextloom AI — Apply Workflow
 
-Complete end-to-end job application workflow. Takes the user from a job posting to polished, tailored documents ready for submission.
+End-to-end: from a job posting to tailored documents ready for submission.
 
-## Prerequisites Check
+Verified against CLI **v0.24.0**.
 
-Before starting, verify:
-
-1. **Auth**: Run `nextloom auth whoami --json`. If exit code 4, tell the user to run `nextloom auth login` first.
-2. **Resume**: Run `nextloom resume view --json`. If no resume exists, direct the user to https://nextloom.ai/resume to upload their master resume.
-
-## Workflow
-
-### Step 1 — Capture the Job
-
-If the user provides a URL:
+## Prerequisites
 
 ```bash
-nextloom app add "<job-posting-url>" --json
+nextloom auth whoami --json
+nextloom resume view --json
 ```
 
-If the user provides a description (company + role):
+Exit code 4 on the first means the user must run `nextloom auth login` — stop there. If the second shows no resume, import one with `nextloom resume import <file>` before generating anything; tailoring works from the master resume.
+
+## Step 1 — Capture the Job
+
+**You supply the text. Nothing else will.** Company, title, required skills, and keywords are extracted by AI from the description text you pass in. Nextloom never fetches a job posting — no code path anywhere reads `--url`. Getting the page and turning it into readable text is your job, not the CLI's.
+
+**One job, one `app add` call.** Get the text *before* you touch the CLI, then create and import in that single command. Never add a record and fix it afterwards — there is no follow-up command that can (`app update` takes `--status` only, and nothing re-parses a posting into an existing record), and a second `app add` does not replace the first, it creates another row. If you are not holding the description text, you are not ready to run the command.
+
+`app add` has no positional argument — always use a flag. A bare path is not an error, it is **silently ignored**: `app add jd.txt --file other.txt` imports `other.txt` and says nothing about `jd.txt`. Never write the path twice. Which flags you use depends on what the user gave you:
+
+| The user gives you | You do | Command |
+|---|---|---|
+| A job link | Scrape the page, extract the description text, pass both | `app add --file <path> --url <link>` |
+| A file, email, PDF, or pasted description | Pass the text; there is usually no link, and that is fine | `app add --file <path>` |
+| A link you cannot scrape | Ask them to paste the description. Do not add. | — |
+
+### Case 1 — the user has a link
+
+1. Fetch the page and extract the real posting text. Many boards render the description via JavaScript (Greenhouse, Lever, Workday embeds), so the raw HTML is often an empty shell — use the board's JSON/API endpoint when there is one.
+2. Write the text to a file.
+3. Add it, passing the original link too:
 
 ```bash
-nextloom app add "<Company Name> - <Role Title>" --json
+nextloom app add --file /tmp/jd.txt --url https://acme.example/jobs/42 --json
 ```
 
-The CLI parses the job posting with AI and extracts: company, title, required skills, qualifications, and job description. Save the returned application `id`.
+Pass `--url` here even though the text is what gets parsed — and pass the *right* URL, which is not always the one you scraped from.
 
-Present a summary to the user before proceeding:
+**Store the link a person would open.** The posting URL is how the browser extension later recognises a page as this application: it compares the address bar against the stored `job_url` as an exact string. A near-miss does not warn you — the extension simply concludes the job is untracked and offers to save it again, which is how duplicates are born.
 
-> **Added**: [Role Title] at [Company Name]
-> **Skills required**: [extracted skills]
-> **App ID**: [id]
+So before passing `--url`:
+
+| Problem | Wrong | Right |
+|---|---|---|
+| Scraped from an API | `boards-api.greenhouse.io/v1/boards/instacart/jobs/8110286` | `www.instacart.careers/job?id=8110286` |
+| Tracking parameters | `apply.workable.com/…/j/E96D7950A5?utm_source=jobright&jr_id=6a29…` | `apply.workable.com/…/j/E96D7950A5` |
+| Redirect target vs shared link | whichever the browser happened to land on | the link the user gave you |
+
+Strip `utm_*`, `gh_src`, `jr_id`, `ref`, `source`. Keep everything that identifies the job — `?id=8110286` and `?gh_jid=` are the posting, not tracking.
+
+If a record was saved without a URL, or with the wrong one, fix it in place. Do not add the job again — that costs a second extraction and leaves a duplicate the server will not merge:
+
+```bash
+nextloom app update app_a1b2c3 --url https://www.instacart.careers/job?id=8110286
+```
+
+### Case 2 — the user has the description, no link
+
+A JD often arrives with no URL at all — a file, an email, a PDF, text pasted into the conversation. Add it with the text alone; `--url` is optional and inventing one is worse than omitting it.
+
+```bash
+nextloom app add --file ~/Downloads/jd.txt --json
+pbpaste | nextloom app add --file - --json
+```
+
+Text pasted into the conversation goes in the same way — write it to a file, or pipe it. There is no flag for inline text: a real description runs to several KB with quotes, `$`, and newlines, which the shell mangles or truncates as a command-line argument, so `--file` is the only input.
+
+### Case 3 — a link you cannot get the text out of
+
+**Never fall back to `--url` alone.** It is not "less accurate" — it does nothing. The create handler skips the import pipeline outright when there is no text (`if (!jobDetailText) return`), so no AI ever runs and the record stays empty forever: no company, no title, no skills, no match score. Tell the user the page could not be read and ask them to paste the description. Adding a record you know will be blank is worse than not adding one.
+
+**`app add` never deduplicates.** The server does not check whether that URL or company already exists, so a retry is not a retry — it is a second application. This is why the text has to be in hand before the call: an add that turns out wrong cannot be undone or amended, only deleted.
+
+Backdating an application the user already submitted:
+
+```bash
+nextloom app add --file jd.txt --applied-date 2026-01-15 --json
+```
+
+Extraction runs before the command returns. Add `--no-wait` to return immediately and check later with `nextloom app view <id>`.
+
+Save the returned `id`, then summarize for the user:
+
+> **Added**: Senior Engineer at Acme Corp — `app_a1b2c3`
+> **Match**: 71%
+> **Skills**: TypeScript · React · PostgreSQL
 >
-> Ready to generate tailored documents?
+> Generate a tailored resume and cover letter?
 
-### Step 2 — Generate Tailored Resume
+## Step 2 — Generate Tailored Resume
 
 ```bash
-nextloom generate resume <app-id> --json
+nextloom doc generate resume app_a1b2c3 --json
 ```
 
-This runs an async pipeline:
-- **Queue** → job enters the generation queue
-- **Benchmark** → scored against current market standards
-- **Tailor** → resume rewritten for this specific role
-- **ATS Check** → scanned for ATS compatibility
-- **Humanize** → natural language polish
-- **Final Check** → quality gate
+Five steps: benchmark → tailor → ATS check → humanize → final check. **The CLI waits and streams progress — do not poll.** Typically 30–90 seconds.
 
-The process takes 30–120 seconds. Poll the status every 5 seconds:
+A retry in the output is normal. When the ATS check rejects a draft the pipeline loops back to tailoring, which is why a run can exceed a minute.
+
+Choose the format and destination:
 
 ```bash
-nextloom generate status <app-id> --json
+nextloom doc generate resume app_a1b2c3 --format pdf --output ./resume.pdf
 ```
 
-When complete, share the output file path with the user. The file is named like `Ada_Lovelace_Resume_Acme_Corp.md`.
+Without `--output`, the file lands under the same name the web app uses: `<Your_Name>_Resume_<Company>.<ext>`.
 
-If the ATS check rejects (score too low), the system auto-retries once. If it fails again, tell the user the ATS score and suggest they review and manually adjust their master resume.
-
-### Step 3 — Generate Cover Letter
+## Step 3 — Generate Cover Letter
 
 ```bash
-nextloom generate cover-letter <app-id> --json
+nextloom doc generate cover-letter app_a1b2c3 --json
 ```
 
-Same async pipeline, different output. When done, share the file path.
+Three steps: match profile → write → humanize.
 
-### Step 4 — Mark as Applied
+## Step 4 — Fill the Application Form
 
-After the user confirms they've submitted their application:
+When you are filling a form on the company's site, **read the profile before asking the user anything.** Most of what an ATS asks is already stored — asking for it wastes their time and makes the tool look like it does not know them.
 
 ```bash
-nextloom app update <app-id> --status Applied --json
+nextloom profile view --all --eeo --json
 ```
 
-### Optional: Generate Additional Documents
+`--eeo` adds the self-identification answers; without it that section is absent and you will think the user never provided them. One call, then answer from it:
+
+| The form asks | Profile path |
+|---|---|
+| First / last name | `personalInfo.firstName` · `personalInfo.lastName` |
+| Email | `personalInfo.email` |
+| Phone | `personalInfo.phoneCountryCode` + `personalInfo.phoneNumber` |
+| City / state / country / postal code | `personalInfo.address.*` |
+| LinkedIn | `links.linkedinUrl` |
+| GitHub | `links.githubUrl` |
+| Website / portfolio | `links.websiteUrl` |
+| Authorized to work in the US? | `workPreferences.authorizedToWorkInUS` |
+| Need visa sponsorship, now or later? | `workPreferences.requireVisaSponsorship` |
+| Willing to relocate? | `workPreferences.openToRelocate` |
+| Earliest start date | `workPreferences.earliestStartDate` |
+| Desired salary | `workPreferences.salaryExpectationMin` + `workPreferences.salaryCurrency` |
+| Remote / hybrid / onsite | `workPreferences.workMode` |
+
+Run `nextloom profile view --path` for the full list; the paths above are the ones ATS forms actually ask for.
+
+### What the profile cannot answer — ask
+
+- **Have you worked here before?**
+- **How did you hear about this role?**
+- **Referral name**, and anything else company-specific.
+- **Work eligibility in any country other than the US.** `authorizedToWorkInUS` says nothing about Canada, the UK, or the EU. Never infer one from the other — it is a legal declaration the user signs, and a wrong guess is worse than a question.
+
+Ask for these in one batch, not one at a time.
+
+### Voluntary self-identification
+
+Fill this section from the profile like any other. The user supplied these answers on nextloom.ai for exactly this purpose, so asking again is friction, not diligence.
+
+`--eeo` adds an `eeo` object to the JSON:
+
+| The form asks | Profile path |
+|---|---|
+| Gender | `eeo.gender` |
+| Race / ethnicity | `eeo.race` · `eeo.hispanicLatino` |
+| Veteran status | `eeo.veteranStatus` |
+| Disability status | `eeo.disabilityStatus` |
+| Pronouns | `eeo.pronouns` |
+| Sexual orientation · transgender experience | `eeo.sexualOrientation` · `eeo.transgenderExperience` |
+
+**Use the stored value verbatim, and never derive one.** A missing answer is a real answer — the user declined that question, and these are voluntary by law. Do not infer gender from a name, veteran status from work history, or anything else from anything else. If the profile has no value and the form demands one, choose its decline option ("prefer not to say"); if it has none, leave the field blank and say so in your summary.
+
+### When browser automation cannot reach the form
+
+Most ATS forms on a company's careers page are an **embedded cross-origin iframe** — Greenhouse, Lever, Workday, Ashby. Accessibility-tree tools read the outer page and find an empty shell; coordinate clicking is fragile on custom dropdowns; and file upload is impossible, because clicking "Attach" opens the OS file picker, which no browser tool can touch.
+
+Do not burn attempts on it. **Hand off to the Nextloom Chrome extension**, which exists for this: its background worker enumerates every frame and messages a content script inside each one, so it is already past the iframe boundary, and it sets the file on the `<input type="file">` directly rather than going through the picker. It ships adapters for Greenhouse, Lever, Workday, Ashby, Workable, iCIMS, Taleo, SmartRecruiters, and a dozen more.
+
+Generate the documents first — the extension attaches the PDFs the API already holds:
 
 ```bash
-nextloom generate follow-up <app-id> --json   # If no response after 1-2 weeks
-nextloom generate thank-you <app-id> --json   # After an interview
+nextloom doc generate resume app_a1b2c3 --format pdf
+nextloom doc generate cover-letter app_a1b2c3 --format pdf
+```
+
+Then tell the user to open the posting and click the Nextloom button, and hand them the answers to the questions the extension cannot know — worked-here-before, how-they-heard, referral. That is a complete handoff, not a failure.
+
+### Fill, then stop
+
+Fill every field you can justify, then hand back for review. **Do not submit.** Say what you filled, what you left blank, and what you guessed at — an application is sent once, and the user is the one whose name is on it.
+
+## Step 5 — Mark as Applied
+
+After the user confirms they submitted:
+
+```bash
+nextloom app update app_a1b2c3 --status Applied --json
+```
+
+## Optional Documents
+
+```bash
+nextloom doc generate follow-up app_a1b2c3 --json
+nextloom doc generate thank-you app_a1b2c3 --json
+```
+
+Follow-ups and thank-you notes render as JSON and save as `follow-up-<app-id>.json` / `thank-you-<app-id>.json`.
+
+## Recovering an Interrupted Generation
+
+If a generation exits 3 the pipeline may still be running server-side. Ask whether the document landed — no job id needed, so this still works tomorrow:
+
+```bash
+nextloom doc list app_a1b2c3
+```
+
+If it is there, the generation finished; `doc get` it rather than regenerating. Only when it is missing and you need to know *why* does the job id matter — and it exists solely in the output of the command that started it:
+
+```bash
+nextloom doc status job_x1y2z3 --json
 ```
 
 ## Pro Tips
 
-- **Multiple applications**: Process one at a time. The generation pipeline is per-application.
-- **ATS score is visible**: After generation, `nextloom app view <id> --json` shows the ATS score in the application details.
-- **Resume quality matters**: Better master resume → better tailoring results. Encourage the user to keep their master resume updated.
-- **Job descriptions**: Better input (full JD with requirements) → better AI parsing → better tailored output.
+- **Better input, better output.** A full job description with requirements beats a title and company.
+- **One application at a time.** Generation is per-application.
+- **Fresh per company.** Don't reuse a cover letter written for one employer at another.
+- **Regenerating costs quota** and replaces the existing document. The CLI warns first.
 
 ## Error Handling
 
-| Error | What to do |
-|-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
-| `exit code 3` | Generation failed. Check `nextloom generate status <app-id> --json` for details. |
-| App add returns empty | The URL may not be parseable. Ask the user for company and role manually. |
-| Resume generation loops | ATS score may be persistently low. Suggest the user review their master resume. |
-| "No resume found" | User needs to upload a master resume at https://nextloom.ai/resume. |
+| Symptom | What to do |
+|---------|-----------|
+| Exit code 4 | Run `nextloom auth login` |
+| Exit code 3 | Generation failed or timed out. Check `nextloom doc list <app-id>` — it may have finished anyway. If it is missing, `nextloom doc status <job-id>` says why. |
+| `Missing required flag "--file"` (exit 1) | You passed `--url` alone, a bare path, or nothing. The posting text is mandatory — scrape or ask for it, write it to a file, and re-run with `--file`. Note this is exit **1**, not the usual usage code: the parser rejects it before the command runs. |
+| Exit code 2 on `app add` | The command ran and refused its input: an unreadable `--file` path, a file with no usable text, or a bad `--applied-date`. Read the message — it names the problem. |
+| An **existing** record has no company or title | It was added elsewhere with a URL and no text, so no import ever ran. You cannot repair it — there is no re-import command. Fetching the text and adding it creates a *second* record, so say that plainly first, and only proceed if the user wants it; then offer to `app delete` the empty one. Never do this silently. Do not create this situation yourself: see Step 1. |
+| No master resume | `nextloom resume import <file>`, or https://nextloom.ai/resume |
+| Generation keeps retrying | The ATS check is rejecting drafts. Suggest reviewing the master resume. |
 
 ## What This Skill Does NOT Do
 
 - Does NOT submit the application to the employer — it generates documents only
-- Does NOT fill in application forms — use the Nextloom Chrome Extension for that
-- Does NOT create a Nextloom account — users must sign up first
-- Does NOT bypass the async pipeline — generation takes real time, be patient
+- Does NOT fill in application forms — use the Nextloom Chrome extension
+- Does NOT create a Nextloom account — sign up first

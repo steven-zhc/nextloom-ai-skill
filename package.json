@@ -1,0 +1,22 @@
+{
+  "name": "nextloom-ai-skill",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agent Skills that teach AI agents to use the Nextloom AI CLI",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://nextloom.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/steven-zhc/nextloom-ai-skill.git"
+  },
+  "scripts": {
+    "test": "node --test scripts/check-drift.test.mjs",
+    "check": "node scripts/check-drift.mjs --ref cli-reference.json",
+    "check:live": "node scripts/check-drift.mjs --strict",
+    "sync:reference": "curl -fsSL https://nextloom.ai/cli-reference.json -o cli-reference.json"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

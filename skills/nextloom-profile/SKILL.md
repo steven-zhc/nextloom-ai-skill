@@ -1,6 +1,6 @@
 ---
 name: nextloom-profile
-description: Manage your Nextloom AI profile — view, edit fields, manage skills. Use when the user says "update my profile", "add a skill", "change my title", "what's in my profile", or anything about their Nextloom profile.
+description: Manage your Nextloom AI profile — view, edit fields, manage skills, import your resume. Use when the user says "update my profile", "add a skill", "change my location", "what's in my profile", or anything about their Nextloom profile.
 license: MIT
 compatibility: claude-code, codex, cursor, opencode, windsurf
 required_tools: terminal
@@ -8,130 +8,168 @@ required_tools: terminal
 
 # Nextloom AI — Profile Management
 
-Manage your Nextloom professional profile through the `nextloom` CLI. Your profile is the foundation for all AI tailoring — the better your profile, the better your generated documents.
+The profile is the foundation for every generated document. Better profile, better tailoring.
+
+Verified against CLI **v0.24.0**.
 
 ## Prerequisites
 
-Run `nextloom auth whoami --json`. If exit code 4 → `nextloom auth login`.
+```bash
+nextloom auth whoami --json
+```
 
-## Commands
+Exit code 4 → `nextloom auth login`.
 
-### View Profile
+## View Profile
 
 ```bash
+nextloom profile view
 nextloom profile view --json
+nextloom profile view --all
+nextloom profile view --all --eeo
 ```
 
-Shows your complete profile: personal info, work preferences, skills, target roles, target locations, salary expectations, and EEO information.
+The default view shows personal info, work preferences, links, and metadata. Sensitive fields are hidden unless asked for:
 
-Present key sections in a clean format:
+- `--all` reveals home address, postal code, birthday, US-residency, work authorization, and target job function ids.
+- `--eeo` reveals the self-identification block (pronouns, gender, race, veteran status, disability, sexual orientation).
 
-```
-👤 Personal: [Name] | [Email] | [Phone]
-💼 Current: [Title] at [Company]
-📍 Location: [City, State]
-🎯 Target: [Role] | $[min]–$[max] | [Remote/Onsite/Hybrid]
-🛠 Skills: [list of skills by category]
-```
+**Only surface EEO data when the user explicitly asks for it.** Don't include it in a general profile summary.
 
-### Edit Profile Fields
+## Edit Profile Fields
 
 ```bash
-nextloom profile edit --field <field> <value>
+nextloom profile edit --field personalInfo.timezone=America/Chicago
 ```
 
-Common fields to edit:
-
-| Field | Example | Description |
-|-------|---------|-------------|
-| `name` | `"Ada Lovelace"` | Full name |
-| `email` | `"ada@example.com"` | Contact email |
-| `phone` | `"+1-555-0123"` | Phone number |
-| `title` | `"Senior Software Engineer"` | Current job title |
-| `company` | `"Acme Corp"` | Current company |
-| `location` | `"San Francisco, CA"` | Your location |
-| `target_role` | `"Staff Engineer"` | Role you're seeking |
-| `target_location` | `"Remote"` | Preferred work location |
-| `salary_min` | `"150000"` | Minimum salary |
-| `salary_max` | `"220000"` | Maximum salary |
-| `bio` | `"Full-stack engineer..."` | Professional summary |
-| `linkedin` | `"https://linkedin.com/in/..."` | LinkedIn URL |
-| `github` | `"https://github.com/..."` | GitHub URL |
-| `website` | `"https://ada.dev"` | Personal website |
-
-Changes take effect immediately for all future document generations.
-
-### Manage Skills
+The form is `--field <dot.path>=<value>`. One `=`, no space. The flag repeats:
 
 ```bash
-# List all skills (organized by category)
+nextloom profile edit --field personalInfo.address.city=Austin --field personalInfo.address.state=Texas
+```
+
+### Discover paths — never guess them
+
+```bash
+nextloom profile view --path
+```
+
+This is the whole point of `--path`: it prints each field's dotted path next to its current value, so you can see exactly what to set. **Run it before any edit.** There is no fixed list of field names to memorize, and inventing a path produces a usage error at best and a silently wrong write at worst.
+
+Four top-level groups are writable. Everything else is server-owned:
+
+| Group | Holds |
+|-------|-------|
+| `personalInfo` | Name, phone, address, timezone, birthday, residency |
+| `workPreferences` | Work mode, employment types, target locations, salary, relocation, start date, work authorization, target roles |
+| `links` | Website, LinkedIn, GitHub |
+| `eeo` | Self-identification |
+
+Setting a path outside these fails with a message pointing you back at `--path`.
+
+### Values are typed
+
+The value's type must match what is already stored at that path. A field holding a list needs JSON array syntax, quoted for the shell:
+
+```bash
+nextloom profile edit --field workPreferences.workMode='["remote","onsite"]'
+```
+
+Scalars go in plain:
+
+```bash
+nextloom profile edit --field workPreferences.salaryExpectationMin=150000
+nextloom profile edit --field links.githubUrl=https://github.com/ada-example
+```
+
+Check the current shape with `--path` first — it prints raw values, so a list shows as `["remote"]` and a number as `150000`.
+
+### Confirm the change
+
+The command reports each change as `path: old → new`. With `--json` you get `{"ok":true,"changes":[{"path","from","to"}]}`. Read it back to the user rather than assuming the write landed.
+
+## Manage Skills
+
+```bash
 nextloom profile skill list
-
-# Add a skill
-nextloom profile skill add "React"
-
-# Remove a skill
-nextloom profile skill remove "jQuery"
+nextloom profile skill list --json
+nextloom profile skill add TypeScript
+nextloom profile skill remove Fortran
 ```
 
-Skills are organized in a taxonomy. When adding, be specific and use standard names:
-- ✅ "React", "TypeScript", "Kubernetes"
-- ❌ "react.js", "TS", "k8s"
+`skill list` groups by category (Cloud, Databases, DevOps, Languages, ML, Other). The `--json` form gives `category` and `display_name` per entry.
 
-After adding/removing skills, the next generated resume will reflect the changes.
+Adding matches against a skill dictionary and normalizes the name — `typescript` comes back as `TypeScript`. Use the ordinary name and let the CLI canonicalize:
 
-### Resume Management
+- Good: `React`, `TypeScript`, `Kubernetes`
+- Avoid: `react.js`, `TS`, `k8s`
+
+Removing a skill that isn't on the profile is reported, not an error.
+
+## Master Resume
 
 ```bash
-# View your master resume
 nextloom resume view --json
-
-# Export as JSON
-nextloom resume export --json
+nextloom resume export --format md
+nextloom resume export --format json --output ./resume.json
+nextloom resume import ./resume.pdf
 ```
 
-To update your master resume (the foundation for all AI tailoring), go to https://nextloom.ai/resume and upload a new one. The CLI supports import too:
+`resume export` writes to stdout unless `--output` is given. Format defaults to `md`.
 
-```bash
-nextloom resume import <file.docx|file.pdf|file.md|file.txt>
-```
+## Filling an Application Form
+
+`profile view --all --eeo --json` is the answer sheet for an ATS form — name, email, phone, address, links, work authorization, sponsorship, relocation, start date, salary, and the voluntary self-identification answers. Read it **before** asking the user for any of it.
+
+It does not cover: whether they have worked at that company before, how they heard about the role, or work eligibility in any country other than the US — `workPreferences.authorizedToWorkInUS` says nothing about Canada or the EU, and inferring one from the other is a legal declaration you are not entitled to make.
+
+Self-identification answers (`--eeo`) are filled in like any other field — the user gave them on nextloom.ai for this purpose. Use them verbatim and never derive one: a missing answer means they declined that question, which is their right, not a gap for you to close.
+
+See `nextloom-apply` for the full field mapping.
+
+`resume import` uploads and parses the file, waiting for processing to finish. Add `--no-wait` to queue it and return immediately.
+
+If the wait times out (exit 3), the parse may still land server-side. Check with `nextloom resume view` rather than re-importing — a second import re-parses the same file and overwrites the master resume.
 
 ## Common Workflows
 
 ### New User Setup
 
-1. `nextloom profile view --json` — see what's already filled
-2. `nextloom profile edit --field name "<name>"` 
-3. `nextloom profile edit --field title "<current title>"`
-4. `nextloom profile skill add "<skill>"` — add key skills
-5. `nextloom resume import <resume-file>` — upload resume
+```bash
+nextloom profile view --path
+nextloom resume import ./resume.pdf
+nextloom profile skill add TypeScript
+```
 
-### Pre-Application Checklist
+Read the paths first, import the resume — which populates much of the profile — then fill gaps and add skills.
 
-Before applying:
-1. `nextloom profile skill list` — make sure relevant skills are listed
-2. `nextloom profile view --json` — verify title, target role, and salary range
-3. `nextloom resume view --json` — confirm resume is current
+### Pre-Application Check
+
+```bash
+nextloom profile skill list
+nextloom profile view
+nextloom resume view --json
+```
+
+Confirm the relevant skills are listed, the work preferences are current, and the master resume is up to date.
 
 ### Career Pivot
 
-When changing roles/industries:
-1. Update `target_role` to the new role
-2. Add relevant skills for the new direction
-3. Remove outdated skills
-4. Upload a reframed resume that emphasizes transferable skills
+Update target roles and work preferences via `--path`-discovered fields, add skills for the new direction, remove stale ones, and re-import a reframed resume.
 
 ## Error Handling
 
-| Error | What to do |
-|-------|-----------|
-| `exit code 4` | Not authenticated. Direct to `nextloom auth login`. |
-| Field not found | List the available fields from the table above. |
-| Skill already exists | "This skill is already in your profile." |
-| Resume import fails | Check file format — supports .txt, .md, .docx, .pdf. |
+| Symptom | What to do |
+|---------|-----------|
+| Exit code 4 | Run `nextloom auth login` |
+| `"X" is not a writable field group` | Only `personalInfo`, `workPreferences`, `links`, `eeo` are writable. Run `nextloom profile view --path`. |
+| `illegal field path segment` | Malformed dotted path. Re-check against `--path`. |
+| Type mismatch on edit | The stored value is a list or number. Match its shape — `'["remote"]'`, `150000`. |
+| Exit code 2 on edit | Probably a space instead of `=`. The form is `--field path=value`. |
+| Resume import fails | Check the file format and that the path exists |
 
 ## What This Skill Does NOT Do
 
 - Does NOT create a Nextloom account — sign up at https://nextloom.ai
-- Does NOT upload the actual resume file for parsing — use `nextloom resume import` or the web app
-- Does NOT guarantee interview calls — your profile helps, but it's not magic
+- Does NOT edit server-owned fields — profile id, timestamps, and match scores are read-only
+- Does NOT expose EEO data unless the user asks for it

@@ -114,24 +114,57 @@ Compatible with any agent that supports the standard — Claude Code, Codex, Cur
 
 ## CLI Reference
 
-All commands support `--json` for structured output and `--env dev|prod` for environment switching.
+Verified against CLI **v0.24.0**. Every command supports `--json` for structured output and `--env dev|prod` for environment switching.
 
 | Command | Description |
 |---------|-------------|
-| `nextloom auth login` | Browser-based OAuth login |
-| `nextloom auth whoami` | Show current user |
-| `nextloom profile view` | View your profile |
-| `nextloom profile edit --field <key> <value>` | Edit a profile field |
+| `nextloom auth login` | Browser-based PKCE OAuth login |
+| `nextloom auth whoami` | Show the signed-in account |
+| `nextloom auth logout` | Revoke and clear the local session |
+| `nextloom profile view` | View your profile (`--all`, `--eeo`, `--path`) |
+| `nextloom profile edit --field <path>=<value>` | Edit profile fields by dotted path |
 | `nextloom profile skill add <skill>` | Add a skill |
-| `nextloom app list` | List applications (supports --status, --search, --sort) |
-| `nextloom app add <url>` | Add a job from URL (AI-parsed) |
-| `nextloom app view <id>` | View application details |
-| `nextloom app update <id> --status <status>` | Update application status |
+| `nextloom profile skill remove <skill>` | Remove a skill |
+| `nextloom app list` | List applications (`--status`, `--search`, `--sort`, `--order`) |
+| `nextloom app add --file <path>` | Add a job from a job-description file (`--file -` for stdin) |
+| `nextloom app add --file <path> --url <url>` | Same, keeping the posting link — Nextloom never fetches it |
+| `nextloom app view <id>` | View an application (`--docs`, `--full`) |
+| `nextloom app update <id> --status <status>` | Update status, and `--url` / `--company` / dates |
+| `nextloom app delete <id> --force` | Delete an application |
 | `nextloom resume view` | View your master resume |
-| `nextloom generate resume <app-id>` | Generate a tailored resume |
-| `nextloom generate cover-letter <app-id>` | Generate a tailored cover letter |
-| `nextloom generate follow-up <app-id>` | Generate a follow-up email |
-| `nextloom generate thank-you <app-id>` | Generate a thank-you note |
+| `nextloom resume export --format <fmt>` | Export the resume as md or json |
+| `nextloom resume import <file>` | Import a resume file |
+| `nextloom doc generate resume <app-id>` | Generate a tailored resume |
+| `nextloom doc generate cover-letter <app-id>` | Generate a tailored cover letter |
+| `nextloom doc generate follow-up <app-id>` | Generate a follow-up email |
+| `nextloom doc generate thank-you <app-id>` | Generate a thank-you note |
+| `nextloom doc status <job-id>` | Check an async generation job |
+| `nextloom doc list <app-id>` | Show which documents exist |
+| `nextloom doc get <type> <app-id>` | Download an existing document — no regeneration, no quota |
+| `nextloom completion shell <shell>` | Print a shell completion script |
+
+The full machine-readable reference lives at [nextloom.ai/cli-reference.json](https://nextloom.ai/cli-reference.json), generated from the CLI's own command tree.
+
+### Three things that trip agents up
+
+1. **`app add` requires `--file`, and a bare path is ignored rather than rejected.** Nextloom never fetches a job page, so `--url` alone fails — scrape the posting yourself and pass the text, keeping `--url` for the link.
+2. **`doc status` takes a job id**, not an application id.
+3. **`app delete` requires `--force`** under `--json` or any non-interactive shell.
+
+## Staying in Sync
+
+`cli-reference.json` in this repo is a pinned snapshot of the CLI's published command tree. `scripts/check-drift.mjs` checks every command written in these skills — in fenced blocks **and** in Markdown tables — against it.
+
+```bash
+npm test                 # the guard's own tests
+npm run check            # against the pin: hermetic, no network
+npm run check:live       # against https://nextloom.ai/cli-reference.json
+npm run sync:reference   # refresh the pin after a CLI release
+```
+
+CI runs two jobs. On every push and pull request, the **gate** checks the skills against the pin — deterministic and offline, so a nextloom.ai outage can't fail an unrelated PR. Weekly, a **live** job diffs the published reference against the pin and fails if the CLI has moved; refreshing the pin is the moment to re-read the skills.
+
+The check is structural. It verifies command paths, flag names, and positional argument counts — not that an argument is the right *kind* of value, and not prose. Neither job can see which CLI version you have installed; that's why the skills tell your agent to run `nextloom --version` first.
 
 ## License
 

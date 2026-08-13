@@ -14,7 +14,7 @@ cd awesome-claude-skills
 Add the following under the **Productivity & Organization** section in `README.md`:
 
 ```markdown
-- [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) - AI-powered job search assistant — track applications across companies, generate tailored resumes & cover letters per role, and manage your entire application lifecycle from your AI agent. Uses the Nextloom AI CLI (`nai`). *By [@steven-zhc](https://github.com/steven-zhc)*
+- [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) - AI-powered job search assistant — track applications across companies, generate tailored resumes & cover letters per role, and manage your entire application lifecycle from your AI agent. Uses the Nextloom AI CLI (`nextloom`). *By [@steven-zhc](https://github.com/steven-zhc)*
 ```
 
 ## Step 3: Commit & PR
@@ -29,7 +29,7 @@ Adds the [nextloom-ai-skill](https://github.com/steven-zhc/nextloom-ai-skill) pl
 
 ### What it does
 
-Nextloom AI Skills turn your AI agent (Claude Code, Codex, Cursor) into a job search assistant. 7 skills covering the full application lifecycle:
+Nextloom AI Skills turn your AI agent (Claude Code, Codex, Cursor) into a job search assistant, covering the full application lifecycle:
 
 - **nextloom**: Full workflow — auth → add job → generate tailored documents → track status
 - **nextloom-auth**: OAuth authentication management
