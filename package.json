@@ -14,7 +14,7 @@
     "test": "node --test scripts/check-drift.test.mjs",
     "check": "node scripts/check-drift.mjs --ref cli-reference.json",
     "check:live": "node scripts/check-drift.mjs --strict",
-    "sync:reference": "curl -fsSL https://nextloom.ai/cli-reference.json -o cli-reference.json"
+    "sync:reference": "curl -fsSL https://nextloom.ai/cli-reference.json -o cli-reference.json.tmp && node -e \"const f=require('fs');const j=JSON.parse(f.readFileSync('cli-reference.json.tmp','utf8'));f.writeFileSync('cli-reference.json',JSON.stringify(j,null,2)+'\\n')\" && rm cli-reference.json.tmp"
   },
   "engines": {
     "node": ">=20"
