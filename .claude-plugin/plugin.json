@@ -1,7 +1,7 @@
 {
   "name": "nextloom-ai",
   "description": "Nextloom AI job search assistant — manage applications, generate tailored resumes & cover letters, track your job search pipeline, all from your AI agent.",
-  "version": "1.0.0",
+  "version": "0.24.0",
   "author": {
     "name": "Nextloom AI",
     "email": "hello@nextloom.ai"

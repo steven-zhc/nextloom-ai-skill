@@ -1,6 +1,6 @@
 {
   "name": "nextloom-ai-skill",
-  "version": "1.0.0",
+  "version": "0.24.0",
   "private": true,
   "description": "Agent Skills that teach AI agents to use the Nextloom AI CLI",
   "type": "module",
